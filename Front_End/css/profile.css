@@ -1,0 +1,71 @@
+/* ==========================================================================
+   ESTILOS PARA A PÁGINA DE PERFIL
+   ========================================================================== */
+
+.profile-card {
+    padding: 2.5rem;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-icon {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+}
+
+.profile-title h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.profile-title p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.profile-header .btn {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-divider {
+    border: 0;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 2rem 0;
+}
+
+.profile-section {
+    margin-bottom: 2rem;
+}
+
+.profile-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+/* Reutilizando form-grid de page-forms.css, mas garantindo que campos full-width funcionem */
+.form-grid .form-group {
+    margin-bottom: 0; /* Ajuste para espaçamento dentro do grid */
+}

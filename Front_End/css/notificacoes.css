@@ -1,0 +1,60 @@
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.notifications-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.notifications-header .new-badge {
+    background-color: var(--primary-green);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.notification-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    position: relative;
+}
+.notification-item .icon {
+    font-size: 1.25rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.notification-content h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.notification-content p { color: var(--text-secondary); }
+.notification-time { position: absolute; top: 1.5rem; right: 1.5rem; color: var(--text-secondary); font-size: 0.9rem; }
+
+/* Status Variants */
+.status-warning { border-left: 5px solid var(--status-warning); background-color: #fff9e6; }
+.status-warning .icon { color: var(--status-warning); background-color: #fff0b3; }
+.status-info { border-left: 5px solid var(--status-info); background-color: #e8f6f8; }
+.status-info .icon { color: var(--status-info); background-color: #bcecf2; }
+.status-success { border-left: 5px solid var(--primary-green); background-color: #eaf6ec; }
+.status-success .icon { color: var(--primary-green); background-color: #c5e6cb; }
+
+.notification-item:not(.status-warning):not(.status-info):not(.status-success) {
+    border-left: 5px solid var(--text-secondary);
+}
+.notification-item:not(.status-warning):not(.status-info):not(.status-success) .icon {
+    color: var(--text-secondary); background-color: #f0f0f0;
+}

@@ -1,0 +1,46 @@
+.page-title-container {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.page-title-container h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem 2rem;
+}
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group.col-span-2 { grid-column: span 2; }
+textarea { min-height: 100px; resize: vertical; }
+
+.form-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Para a página de consulta de paciente */
+.search-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.search-form input { flex-grow: 1; }
+
+input[readonly] {
+    background-color: var(--input-background) !important;
+    color: var(--text-secondary);
+}
+
+/*Ajuste para input com texto mais claro em campos readonly */
+input[readonly]::placeholder {
+    color: var(--text-secondary);
+}

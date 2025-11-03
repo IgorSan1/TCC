@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Paciente - YaraVac</title>
+    <link rel="icon" href="assets/logo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/paciente-detalhes.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="main-header">
+        <a href="home.html" class="logo-container">
+            <img src="assets/logo.png" alt="YaraVac Logo">
+            <h1>YaraVac</h1>
+        </a>
+        <div class="user-actions">
+            <a href="notificacoes.html" class="notification-bell">
+                <i class="fa-regular fa-bell"></i>
+                <div class="badge">0</div>
+            </a>
+            <a href="perfil.html" class="user-profile">
+                <i class="fa-regular fa-user"></i>
+                <span>Usuário</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="page-header">
+            <h2>Detalhes do Paciente</h2>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Informações Pessoais -->
+            <div class="card info-card">
+                <h3 class="card-title"><i class="fa-solid fa-user-tag"></i> Informações Pessoais</h3>
+                <div class="info-grid">
+                    <div class="info-item"><strong>Nome Completo:</strong> <span id="nome-completo"></span></div>
+                    <div class="info-item"><strong>CPF:</strong> <span id="cpf"></span></div>
+                    <div class="info-item"><strong>Data de Nascimento:</strong> <span id="data-nascimento"></span></div>
+                    <div class="info-item"><strong>Sexo:</strong> <span id="sexo"></span></div>
+                    <div class="info-item"><strong>CNS:</strong> <span id="cns"></span></div>
+                    <div class="info-item"><strong>Etnia:</strong> <span id="etnia"></span></div>
+                    <div class="info-item"><strong>Comunidade:</strong> <span id="comunidade"></span></div>
+                    <div class="info-item full-width"><strong>Comorbidade:</strong> <span id="comorbidade"></span></div>
+                </div>
+            </div>
+
+            <!-- Histórico Vacinal -->
+            <div class="card historico-card">
+                <h3 class="card-title"><i class="fa-solid fa-syringe"></i> Histórico Vacinal</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vacina</th>
+                            <th>Dose</th>
+                            <th>Data Aplicação</th>
+                            <th>Lote</th>
+                            <th>Fabricante</th>
+                            <th>Profissional</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historico-vacinacao-body">
+                        <!-- Linhas do histórico serão inseridas aqui pelo JavaScript -->
+                    </tbody>
+                </table>
+                <p id="historico-vacinacao-vazio" style="display: none; text-align: center; padding: 20px;">Nenhuma vacinação registrada para este paciente.</p>
+            </div>
+
+            <!-- Ações -->
+            <div class="action-buttons">
+                <a href="home.html" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar para Home</a>
+                <button id="btn-registrar-vacinacao" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Registrar Nova Vacinação</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/header-user.js"></script>
+    <script src="js/paciente-detalhes.js"></script>
+</body>
+</html>

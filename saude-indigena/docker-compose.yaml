@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16.3
+    environment:
+      POSTGRES_PASSWORD: "123"
+    ports:
+      - "5433:5432"  # acessa o banco pela porta 5433 no host
+    volumes:
+      - /opt/docker-data/postgres-data:/var/lib/postgresql/data
+    networks:
+      - postgres-compose-network
+
+networks:
+  postgres-compose-network:
+    driver: bridge

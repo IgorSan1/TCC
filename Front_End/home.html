@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - YaraVac</title>
+    <link rel="icon" href="assets/logo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="main-header">
+        <a href="home.html" class="logo-container">
+            <img src="assets/logo.png" alt="YaraVac Logo">
+            <h1>YaraVac</h1>
+        </a>
+        <div class="user-actions">
+            <a href="notificacoes.html" class="notification-bell">
+                <i class="fa-regular fa-bell"></i>
+                <div class="badge">3</div>
+            </a>
+            <a href="perfil.html" class="user-profile">
+                <i class="fa-regular fa-user"></i>
+                <span>Admin</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="dashboard-header">
+            <img src="assets/logo.png" alt="YaraVac Logo">
+            <div>
+                <h2>Bem-vindo ao YaraVac</h2>
+                <p>Sistema de Gerenciamento de Vacinação</p>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass icon"></i>
+            <input type="search" class="search-bar" placeholder="Buscar paciente por CPF">
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card grid-col-span-3">
+                <h3 class="card-title">Ações rápidas</h3>
+                <div class="quick-actions-container">
+                    <div class="action-item">
+                        <a href="cadastrar-paciente.html">
+                            <i class="fa-regular fa-user"></i>
+                            Cadastrar Paciente
+                        </a>
+                    </div>
+                    <div class="action-item">
+                        <a href="registrar-vacinacao.html">
+                            <i class="fa-solid fa-pencil"></i>
+                            Registrar Vacinação
+                        </a>
+                    </div>
+                    <div class="action-item">
+                        <a href="cadastrar-vacina.html">
+                            <i class="fa-solid fa-plus"></i>
+                            Cadastrar Vacina
+                        </a>
+                    </div>
+                    <div class="action-item" id="btnCadastroUsuario">
+                        <a href="cadastrar-usuario.html">
+                            <i class="fa-solid fa-user-plus"></i>
+                            Cadastrar Usuário
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stat-card">
+                <h3 class="card-title">Pacientes Registrados</h3>
+                <h3 class="blue">2.847</h3>
+            </div>
+
+            <div class="card stat-card">
+                <h3 class="card-title">Vacinas aplicadas no dia</h3>
+                <h3 class="green">156</h3>
+            </div>
+
+            <div class="card coverage-card grid-col-span-2">
+                <div class="progress-circle">
+                    <div class="percent">78%</div>
+                </div>
+                <div class="progress-bar-group">
+                    <h3 class="card-title">Cobertura de vacinação</h3>
+                    <div class="progress-item">
+                        <div class="progress-label"><span>Vacina-1</span><span>65%</span></div>
+                        <div class="progress-bar">
+                            <div class="value" style="width: 65%;"></div>
+                            <div class="remainder" style="width: 35%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label"><span>Vacina-2</span><span>72%</span></div>
+                        <div class="progress-bar">
+                            <div class="value" style="width: 72%;"></div>
+                            <div class="remainder" style="width: 28%;"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-label"><span>Vacina-3</span><span>91%</span></div>
+                        <div class="progress-bar">
+                            <div class="value" style="width: 91%;"></div>
+                            <div class="remainder" style="width: 9%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Notificações e alertas</h3>
+                <div class="notifications-list">
+                    <div class="notification-item"><div class="placeholder p-80"></div></div>
+                    <div class="notification-item"><div class="placeholder p-60"></div></div>
+                    <div class="notification-item"><div class="placeholder p-80"></div></div>
+                    <div class="notification-item"><div class="placeholder p-60"></div></div>
+                </div>
+                <a href="notificacoes.html" class="view-all-link">
+                    <span>Ver todas as notificações</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </main>
+    <script src="js/header-user.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>

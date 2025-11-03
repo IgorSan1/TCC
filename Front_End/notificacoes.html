@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificações - YaraVac</title>
+    <link rel="icon" href="assets/logo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/notificacoes.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="main-header">
+        <a href="home.html" class="logo-container">
+            <img src="assets/logo.png" alt="YaraVac Logo">
+            <h1>YaraVac</h1>
+        </a>
+        <div class="user-actions">
+            <a href="notificacoes.html" class="notification-bell">
+                <i class="fa-regular fa-bell"></i>
+                <div class="badge">3</div>
+            </a>
+            <a href="perfil.html" class="user-profile">
+                <i class="fa-regular fa-user"></i>
+                <span>Usuario@123</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="card">
+            <div class="notifications-header">
+                <h2><i class="fa-regular fa-bell"></i>Notificações e alertas</h2>
+                <div class="new-badge">7 novas</div>
+            </div>
+            <div class="notifications-list">
+                <div class="notification-item status-warning">
+                    <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="notification-content">
+                        <h3>Estoque Baixo de Vacinas</h3>
+                        <p>O estoque da Vacina COVID-19 está com apenas 15 doses restantes. Solicitar reposição urgente.</p>
+                    </div>
+                    <div class="notification-time">2 horas atrás</div>
+                </div>
+                <div class="notification-item status-info">
+                    <div class="icon"><i class="fa-solid fa-circle-info"></i></div>
+                    <div class="notification-content">
+                        <h3>Novo Protocolo de Vacinação</h3>
+                        <p>Implementado novo protocolo para vacinação infantil. Consulte as diretrizes atualizadas no sistema.</p>
+                    </div>
+                    <div class="notification-time">1 dia atrás</div>
+                </div>
+                <div class="notification-item status-success">
+                    <div class="icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="notification-content">
+                        <h3>Meta de Vacinação Atingida</h3>
+                        <p>Parabéns! A meta mensal de vacinação foi atingida com 3 dias de antecedência.</p>
+                    </div>
+                    <div class="notification-time">2 dias atrás</div>
+                </div>
+                <div class="notification-item status-warning">
+                    <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="notification-content">
+                        <h3>Paciente com Dose Atrasada</h3>
+                        <p>Maria Silva Santos está com a segunda dose da Hepatite B atrasada há 15 dias.</p>
+                    </div>
+                    <div class="notification-time">3 dias atrás</div>
+                </div>
+                <div class="notification-item">
+                    <div class="icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                    <div class="notification-content">
+                        <h3>Manutenção do Sistema</h3>
+                        <p>Manutenção programada para domingo das 02:00 às 06:00. Sistema ficará indisponível.</p>
+                    </div>
+                    <div class="notification-time">1 semana atrás</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="js/header-user.js"></script>
+</body>
+</html>

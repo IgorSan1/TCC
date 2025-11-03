@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Usuário - YaraVac</title>
+    <link rel="icon" href="assets/logo.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/page-forms.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header class="main-header">
+        <a href="home.html" class="logo-container">
+            <img src="assets/logo.png" alt="YaraVac Logo">
+            <h1>YaraVac</h1>
+        </a>
+        <div class="user-actions">
+            <a href="notificacoes.html" class="notification-bell">
+                <i class="fa-regular fa-bell"></i>
+                <div class="badge">3</div>
+            </a>
+            <a href="perfil.html" class="user-profile">
+                <i class="fa-regular fa-user"></i>
+                <span></span>
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="card profile-card">
+            <div class="profile-header">
+                <div class="profile-title">
+                    <i class="fa-solid fa-user-circle profile-icon"></i>
+                    <div>
+                        <h2>Perfil do Usuário</h2>
+                        <p>Informações pessoais e profissionais</p>
+                    </div>
+                </div>
+                <button class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Editar</button>
+            </div>
+
+            <hr class="profile-divider">
+
+            <section class="profile-section">
+                <h3 class="section-title">Informações Pessoais</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Usuário:</label><input type="text" value="admin" readonly></div>
+                    <div class="form-group"><label>CPF:</label><input type="text" value="000.000.000-00" readonly></div>
+                    <div class="form-group"><label>Data de nascimento:</label><input type="text" value="15/03/1985" readonly></div>
+                    <div class="form-group full-width"><label>Nome completo:</label><input type="text" value="João Silva Santos" readonly></div>
+                    <div class="form-group"><label>E-mail:</label><input type="email" value="joao.santos@saude.gov.br" readonly></div>
+                    <div class="form-group"><label>Telefone:</label><input type="tel" value="(11) 99999-9999" readonly></div>
+                </div>
+            </section>
+
+            <hr class="profile-divider">
+
+            <section class="profile-section">
+                <h3 class="section-title">Informações Profissionais</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Cargo:</label><input type="text" value="Agente de Saúde" readonly></div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <script src="js/perfil.js"></script>
+    <script src="js/header-user.js"></script>
+</body>
+</html>

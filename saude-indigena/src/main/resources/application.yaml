@@ -1,0 +1,73 @@
+app:
+  version: ${APP_VERSION}
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:my-secret-key}
+
+server:
+  servlet:
+    context-path: ${APP_CONTEXTO}
+  port: ${APP_PORT}
+
+spring:
+  application:
+    name: ${APP_NOME}
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    generate-ddl: true
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: ${DATABASE_SCHEMA}
+  flyway:
+    enabled: true
+    schemas: ${DATABASE_SCHEMA}
+
+springdoc:
+  info:
+    title: Sa�de Ind�gena
+    description: Sistema de Sa�de Ind�gena
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+
+  file:
+    name: logs/saude-indigena.log
+
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+  logback:
+    rollingpolicy:
+      fileNamePattern: logs/saude-indigena-%d{yyyy-MM-dd}.%i.log
+      maxFileSize: 10MB
+      maxHistory: 10
+      totalSizeCap: 1GB
+
+  console:
+    enabled: true
+    level: INFO
+
+  color:
+    enabled: true
+
+  spring:
+    lifecycle:
+      logging:
+      # level: DEBUG
+
+  http:
+    client:
+      request:
+        logging:
+          level: DEBUG
+      response:
+        logging:
+          level: DEBUG
