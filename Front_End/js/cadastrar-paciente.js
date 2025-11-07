@@ -11,10 +11,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const etnia = document.getElementById("etnia").value.trim();
         const sexo = document.getElementById("sexo").value;
         const comunidade = document.getElementById("comunidade").value.trim();
-        const comorbidade = document.getElementById("comorbidade").value.trim();
+        const comorbidade = document.getElementById("comorbidade").value.trim(); // ✅ CORRIGIDO
+
+        console.log("📝 Dados capturados do formulário:");
+        console.log("- CNS:", cns);
+        console.log("- CPF:", cpf);
+        console.log("- Nascimento:", nascimento);
+        console.log("- Nome:", nomeCompleto);
+        console.log("- Etnia:", etnia);
+        console.log("- Sexo:", sexo);
+        console.log("- Comunidade:", comunidade);
+        console.log("- Comorbidade:", comorbidade); // ✅ VERIFICAR NO CONSOLE
 
         // Validações básicas
-        if (!cns || !cpf || !nascimento || !nomeCompleto || !etnia || !sexo || !comunidade || !comorbidade) {
+        if (!cns || !cpf || !nascimento || !nomeCompleto || !etnia || !sexo || !comunidade) {
             alert("Por favor, preencha todos os campos obrigatórios.");
             return;
         }
@@ -41,11 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
             cpf,
             sexo,
             dataNascimento,
-            comorbidade,
+            comorbidade: comorbidade || "Nenhuma", // ✅ GARANTIR QUE SEMPRE TENHA VALOR
             etnia,
             cns: cnsLimpo,
             comunidade
         };
+
+        console.log("📤 Payload que será enviado para o backend:");
+        console.log(JSON.stringify(data, null, 2));
 
         try {
             const token = localStorage.getItem("token");
@@ -54,6 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "login.html";
                 return;
             }
+
+            console.log("🔐 Token encontrado, enviando requisição...");
 
             const response = await fetch("http://localhost:8080/api/v1/pessoa", {
                 method: "POST",
@@ -64,17 +79,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify(data)
             });
 
+            console.log("📥 Status da resposta:", response.status);
+
             if (response.ok) {
                 const result = await response.json();
+                console.log("✅ Resposta do servidor:", result);
                 alert(result.mensagem || "Paciente cadastrado com sucesso!");
                 form.reset();
                 window.location.href = "home.html";
             } else {
                 const errorData = await response.json().catch(() => ({ mensagem: response.statusText }));
+                console.error("❌ Erro do servidor:", errorData);
                 alert(`Erro ao cadastrar paciente: ${errorData.mensagem}`);
             }
         } catch (error) {
-            console.error("Erro:", error);
+            console.error("❌ Erro na requisição:", error);
             alert("Erro ao conectar com o servidor.");
         }
     });
@@ -83,8 +102,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCancelar = document.querySelector(".btn-secondary");
     if (btnCancelar) {
         btnCancelar.addEventListener("click", () => {
-            window.location.href = "home.html";
+            if (confirm("Deseja realmente cancelar? Os dados não serão salvos.")) {
+                window.location.href = "home.html";
+            }
+        });
+    }
+
+    // Aplicar máscara de CPF
+    const cpfInput = document.getElementById("cpf");
+    if (cpfInput) {
+        cpfInput.addEventListener("input", (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length > 9) {
+                e.target.value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+            } else if (value.length > 6) {
+                e.target.value = value.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3");
+            } else if (value.length > 3) {
+                e.target.value = value.replace(/(\d{3})(\d{3})/, "$1.$2");
+            } else {
+                e.target.value = value;
+            }
+        });
+    }
+
+    // Aplicar máscara de CNS
+    const cnsInput = document.getElementById("cns");
+    if (cnsInput) {
+        cnsInput.addEventListener("input", (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value.length > 15) value = value.slice(0, 15);
+            e.target.value = value;
         });
     }
 });
-

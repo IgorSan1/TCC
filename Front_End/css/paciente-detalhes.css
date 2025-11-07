@@ -1,16 +1,18 @@
+/* Adições para paciente-detalhes.css */
+
 .page-header {
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .page-header h2 {
-    color: var(--color-primary);
+    color: var(--text-primary);
     margin-bottom: 5px;
 }
 
 .page-header p {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 1rem;
 }
 
@@ -31,17 +33,25 @@
     margin-top: 15px;
 }
 
+.info-item {
+    padding: 0.5rem 0;
+}
+
 .info-item strong {
-    color: var(--color-text-primary);
+    color: var(--text-primary);
     display: block;
-    margin-bottom: 2px;
-    font-weight: 600; /* Garante que o rótulo seja negrito */
+    margin-bottom: 5px;
+    font-weight: 600;
 }
 
 .info-item span {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 0.95rem;
-    display: block; /* Garante que o valor fique em uma nova linha */
+    display: block;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
 }
 
 .historico-card {
@@ -57,19 +67,19 @@
 .data-table th, .data-table td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .data-table th {
-    background-color: var(--color-background-light);
-    color: var(--color-text-primary);
+    background-color: var(--background-color);
+    color: var(--text-primary);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85rem;
 }
 
 .data-table tbody tr:hover {
-    background-color: var(--color-background-hover);
+    background-color: var(--background-color);
 }
 
 .action-buttons {
@@ -79,13 +89,12 @@
     justify-content: flex-end;
 }
 
-.btn-secondary {
-    background-color: #6c757d; /* Cor cinza/secundária */
-    color: white;
-}
-
-.btn-secondary:hover {
-    background-color: #5a6268;
+/* Estilo para mensagem de histórico vazio */
+#historico-vacinacao-vazio {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 /* Responsividade */
@@ -93,8 +102,17 @@
     .info-grid {
         grid-template-columns: 1fr;
     }
+    
     .action-buttons {
         flex-direction: column;
         align-items: stretch;
+    }
+    
+    .data-table {
+        font-size: 0.85rem;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 8px 10px;
     }
 }

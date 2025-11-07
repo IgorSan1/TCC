@@ -64,14 +64,15 @@ public class Pessoa {
     }
 
     public Pessoa(@Valid PessoaCadastroDTO dados) {
-        this.uuid = UUID.randomUUID();
-        this.nomeCompleto = dados.nomeCompleto();
-        this.cpf = dados.cpf();
-        this.sexo = dados.sexo();
-        this.dataNascimento = dados.dataNascimento();
-        this.etnia = dados.etnia();
-        this.cns = dados.cns();
-        this.comunidade = dados.comunidade();
-        this.ativo = true;
+    this.uuid = UUID.randomUUID();
+    this.nomeCompleto = dados.nomeCompleto();
+    this.cpf = dados.cpf();
+    this.sexo = dados.sexo();
+    this.dataNascimento = dados.dataNascimento();
+    this.comorbidade = dados.comorbidade();
+    this.etnia = dados.etnia();
+    this.cns = dados.cns();
+    this.comunidade = dados.comunidade();
+    this.ativo = true;
     }
 }

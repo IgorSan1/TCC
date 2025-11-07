@@ -44,19 +44,14 @@
                     <div class="form-group"><label for="proxima">Data próxima dose (opcional):</label><input type="date" id="proxima"></div>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary">Cancelar</button>
+                    <a href="home.html" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar para Home</a>
                     <button type="submit" class="btn btn-primary">Registrar Vacinação</button>
                 </div>
             </form>
         </div>
     </main>
 
-    <script>
-        (function(){
-            const btn = document.querySelector('.form-actions .btn.btn-secondary');
-            if (btn) btn.addEventListener('click', function(){ window.location.href = 'home.html'; });
-        })();
-    </script>
+
     <script src="js/registrar-vacinacao.js"></script>
     <script src="js/header-user.js"></script>
 </body>
