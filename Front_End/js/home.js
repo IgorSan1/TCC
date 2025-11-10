@@ -61,7 +61,7 @@
     // Verificar se o usuário é ADMIN e exibir o botão de cadastro de usuários
     verificarPermissaoAdmin();
 
-    async function verificarPermissaoAdmin() {
+    function verificarPermissaoAdmin() {
         const token = localStorage.getItem("token");
         if (!token) {
             return;
@@ -71,11 +71,17 @@
         const decodedToken = decodeJWT(token);
         const role = decodedToken?.role;
 
-        // Se for ADMIN, mostrar o botão de cadastro de usuário
+        const btnCadastroUsuario = document.getElementById("btnCadastroUsuario");
+        
+        // Se for ADMIN, mostrar o botão
         if (role === 'ADMIN') {
-            const btnCadastroUsuario = document.getElementById("btnCadastroUsuario");
             if (btnCadastroUsuario) {
-                btnCadastroUsuario.style.display = "";
+                btnCadastroUsuario.style.display = "block";
+            }
+        } else {
+            // Se NÃO for ADMIN, ocultar o botão
+            if (btnCadastroUsuario) {
+                btnCadastroUsuario.style.display = "none";
             }
         }
     }
@@ -165,7 +171,6 @@
 
             const raw = await resp.json().catch(() => ({}));
             
-            // Normaliza possíveis formatos: dados: [[{...}]]  ou dados: [{...}] ou { ... }
             let pessoa = null;
             if (Array.isArray(raw?.dados) && Array.isArray(raw.dados[0])) {
                 pessoa = raw.dados[0][0];
@@ -178,10 +183,7 @@
             }
 
             if (pessoa && pessoa.uuid) {
-                // Armazenar dados do paciente no localStorage para uso posterior
                 localStorage.setItem("pacienteSelecionado", JSON.stringify(pessoa));
-                
-                // Redirecionar para a página de registrar vacinação com o paciente pré-selecionado
                 window.location.href = `paciente-detalhes.html?cpf=${cpf}`;
             } else {
                 alert("Paciente não encontrado (UUID ausente).");

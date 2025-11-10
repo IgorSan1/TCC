@@ -88,31 +88,41 @@
     margin-top: 20px;
     justify-content: flex-end;
 }
-
-/* Estilo para mensagem de histórico vazio */
-#historico-vacinacao-vazio {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-style: italic;
+/* Estilo para linhas filtradas */
+.data-table tbody tr.oculto {
+    display: none;
 }
 
-/* Responsividade */
+.data-table tbody tr.highlight {
+    background-color: rgba(0, 123, 255, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+/* Estilo para mensagem de resultado do filtro */
+#resultado-filtro.tem-resultados {
+    color: var(--primary-blue);
+    font-weight: 500;
+}
+
+#resultado-filtro.sem-resultados {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Responsividade para paginação */
 @media (max-width: 768px) {
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .action-buttons {
+    .paginacao-container {
         flex-direction: column;
-        align-items: stretch;
+        gap: 1rem;
+        align-items: stretch !important;
     }
     
-    .data-table {
-        font-size: 0.85rem;
+    .paginacao-info {
+        text-align: center;
     }
     
-    .data-table th, .data-table td {
-        padding: 8px 10px;
+    .paginacao-botoes {
+        justify-content: center;
+        flex-wrap: wrap;
     }
 }

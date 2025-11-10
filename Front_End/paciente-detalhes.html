@@ -53,6 +53,30 @@
             <!-- Histórico Vacinal -->
             <div class="card historico-card">
                 <h3 class="card-title"><i class="fa-solid fa-syringe"></i> Histórico Vacinal</h3>
+                
+                <!-- Filtro de Busca Integrado -->
+                <div class="filtro-container" style="margin-bottom: 15px;">
+                    <div class="search-container" style="position: relative; margin-bottom: 0;">
+                        <i class="fa-solid fa-magnifying-glass icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                        <input 
+                            type="text" 
+                            id="filtro-vacina" 
+                            class="search-bar" 
+                            placeholder="Buscar vacina por nome..."
+                            style="width: 100%; padding: 1rem 3rem 1rem 2.5rem;"
+                        >
+                        <button 
+                            id="limpar-filtro" 
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.5rem; display: none; border-radius: 4px; transition: background-color 0.2s;"
+                            onmouseover="this.style.backgroundColor='var(--background-color)'"
+                            onmouseout="this.style.backgroundColor='transparent'"
+                        >
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="resultado-filtro" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; min-height: 20px;"></div>
+                </div>
+
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -67,7 +91,7 @@
                         <!-- Linhas do histórico serão inseridas aqui pelo JavaScript -->
                     </tbody>
                 </table>
-                <p id="historico-vacinacao-vazio" style="display: none; text-align: center; padding: 20px;">Nenhuma vacinação registrada para este paciente.</p>
+                <p id="historico-vacinacao-vazio" style="display: none; text-align: center; padding: 40px 20px; color: var(--text-secondary); font-style: italic;">Nenhuma vacinação registrada para este paciente.</p>
             </div>
 
             <!-- Ações -->

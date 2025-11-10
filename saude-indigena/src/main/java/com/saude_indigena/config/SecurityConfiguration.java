@@ -40,11 +40,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         
                         // Endpoints que exigem ADMIN
-                        .requestMatchers(HttpMethod.POST, "/usuario").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/usuario").hasAnyRole("ADMIN")
+                                                
+                        // Endpoints que USER e ADMIN podem acessar
                         .requestMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/usuario/**").hasAnyRole("USER", "ADMIN")
-                        
-                        // Endpoints que USER e ADMIN podem acessar
                         .requestMatchers(HttpMethod.POST, "/vacina").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/vacina/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/pessoa").hasAnyRole("USER", "ADMIN")

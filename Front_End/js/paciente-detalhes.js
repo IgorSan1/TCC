@@ -4,6 +4,12 @@
     const urlParams = new URLSearchParams(window.location.search);
     const cpf = urlParams.get('cpf');
 
+    // Variáveis globais
+    let todasVacinacoes = [];
+    let vacinacoesFiltradasAtual = [];
+    let paginaAtual = 1;
+    const ITENS_POR_PAGINA = 5;
+
     if (!token) {
         alert("Você precisa estar logado para acessar esta página.");
         window.location.href = "login.html";
@@ -26,17 +32,14 @@
     function formatDate(dateString) {
         if (!dateString) return 'N/A';
         
-        // Se já estiver no formato DD/MM/YYYY
         if (dateString.includes('/')) {
             return dateString;
         }
         
-        // Se estiver no formato ISO (YYYY-MM-DD)
         if (dateString.includes('-')) {
             const parts = dateString.split('-');
             if (parts.length === 3) {
                 const [year, month, day] = parts;
-                // Remove possível hora se existir
                 const dayOnly = day.split('T')[0];
                 return `${dayOnly}/${month}/${year}`;
             }
@@ -45,12 +48,287 @@
         return dateString;
     }
 
+    // Função para normalizar texto (remover acentos e converter para minúsculo)
+    function normalizeText(text) {
+        return text.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // Função para criar controles de paginação
+    function criarPaginacao(totalItens) {
+        const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA);
+        
+        // Remover paginação existente se houver
+        const paginacaoExistente = document.querySelector('.paginacao-container');
+        if (paginacaoExistente) {
+            paginacaoExistente.remove();
+        }
+
+        // Se tiver 5 ou menos itens, não mostrar paginação
+        if (totalPaginas <= 1) {
+            return;
+        }
+
+        const historicoCard = document.querySelector('.historico-card');
+        const paginacaoContainer = document.createElement('div');
+        paginacaoContainer.className = 'paginacao-container';
+        paginacaoContainer.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        `;
+
+        // Informação da página
+        const info = document.createElement('div');
+        info.className = 'paginacao-info';
+        info.style.cssText = 'color: var(--text-secondary); font-size: 0.9rem;';
+        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA + 1;
+        const fim = Math.min(paginaAtual * ITENS_POR_PAGINA, totalItens);
+        info.textContent = `Mostrando ${inicio} a ${fim} de ${totalItens} vacinações`;
+
+        // Botões de navegação
+        const botoesContainer = document.createElement('div');
+        botoesContainer.className = 'paginacao-botoes';
+        botoesContainer.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+
+        // Botão Anterior
+        const btnAnterior = document.createElement('button');
+        btnAnterior.className = 'btn-paginacao';
+        btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i> Anterior';
+        btnAnterior.disabled = paginaAtual === 1;
+        btnAnterior.style.cssText = `
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: ${paginaAtual === 1 ? 'var(--background-color)' : 'var(--card-background)'};
+            color: ${paginaAtual === 1 ? 'var(--text-secondary)' : 'var(--text-primary)'};
+            cursor: ${paginaAtual === 1 ? 'not-allowed' : 'pointer'};
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        `;
+        if (paginaAtual > 1) {
+            btnAnterior.onmouseover = () => {
+                btnAnterior.style.backgroundColor = 'var(--background-color)';
+                btnAnterior.style.borderColor = 'var(--primary-blue)';
+            };
+            btnAnterior.onmouseout = () => {
+                btnAnterior.style.backgroundColor = 'var(--card-background)';
+                btnAnterior.style.borderColor = 'var(--border-color)';
+            };
+        }
+        btnAnterior.addEventListener('click', () => {
+            if (paginaAtual > 1) {
+                paginaAtual--;
+                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+            }
+        });
+
+        // Números das páginas
+        const paginasNumeros = document.createElement('div');
+        paginasNumeros.style.cssText = 'display: flex; gap: 0.3rem;';
+
+        for (let i = 1; i <= totalPaginas; i++) {
+            const btnPagina = document.createElement('button');
+            btnPagina.textContent = i;
+            btnPagina.className = 'btn-pagina-numero';
+            const isAtiva = i === paginaAtual;
+            btnPagina.style.cssText = `
+                padding: 0.5rem 0.75rem;
+                border: 1px solid ${isAtiva ? 'var(--primary-blue)' : 'var(--border-color)'};
+                border-radius: 8px;
+                background-color: ${isAtiva ? 'var(--primary-blue)' : 'var(--card-background)'};
+                color: ${isAtiva ? 'white' : 'var(--text-primary)'};
+                cursor: pointer;
+                font-size: 0.9rem;
+                font-weight: ${isAtiva ? '600' : '500'};
+                min-width: 40px;
+                transition: all 0.2s ease;
+            `;
+            if (!isAtiva) {
+                btnPagina.onmouseover = () => {
+                    btnPagina.style.backgroundColor = 'var(--background-color)';
+                    btnPagina.style.borderColor = 'var(--primary-blue)';
+                };
+                btnPagina.onmouseout = () => {
+                    btnPagina.style.backgroundColor = 'var(--card-background)';
+                    btnPagina.style.borderColor = 'var(--border-color)';
+                };
+            }
+            btnPagina.addEventListener('click', () => {
+                paginaAtual = i;
+                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+            });
+            paginasNumeros.appendChild(btnPagina);
+        }
+
+        // Botão Próximo
+        const btnProximo = document.createElement('button');
+        btnProximo.className = 'btn-paginacao';
+        btnProximo.innerHTML = 'Próximo <i class="fa-solid fa-chevron-right"></i>';
+        btnProximo.disabled = paginaAtual === totalPaginas;
+        btnProximo.style.cssText = `
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: ${paginaAtual === totalPaginas ? 'var(--background-color)' : 'var(--card-background)'};
+            color: ${paginaAtual === totalPaginas ? 'var(--text-secondary)' : 'var(--text-primary)'};
+            cursor: ${paginaAtual === totalPaginas ? 'not-allowed' : 'pointer'};
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        `;
+        if (paginaAtual < totalPaginas) {
+            btnProximo.onmouseover = () => {
+                btnProximo.style.backgroundColor = 'var(--background-color)';
+                btnProximo.style.borderColor = 'var(--primary-blue)';
+            };
+            btnProximo.onmouseout = () => {
+                btnProximo.style.backgroundColor = 'var(--card-background)';
+                btnProximo.style.borderColor = 'var(--border-color)';
+            };
+        }
+        btnProximo.addEventListener('click', () => {
+            if (paginaAtual < totalPaginas) {
+                paginaAtual++;
+                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+            }
+        });
+
+        botoesContainer.appendChild(btnAnterior);
+        botoesContainer.appendChild(paginasNumeros);
+        botoesContainer.appendChild(btnProximo);
+
+        paginacaoContainer.appendChild(info);
+        paginacaoContainer.appendChild(botoesContainer);
+
+        historicoCard.appendChild(paginacaoContainer);
+    }
+
+    // Função para filtrar vacinações por nome da vacina
+    function filtrarVacinacoes() {
+        const filtroInput = document.getElementById('filtro-vacina');
+        const filtroTexto = normalizeText(filtroInput.value.trim());
+        const resultadoDiv = document.getElementById('resultado-filtro');
+        const btnLimpar = document.getElementById('limpar-filtro');
+
+        // Mostrar/ocultar botão de limpar
+        if (filtroTexto.length > 0) {
+            btnLimpar.style.display = 'flex';
+        } else {
+            btnLimpar.style.display = 'none';
+        }
+
+        // Se não há filtro, mostrar todas
+        if (filtroTexto.length === 0) {
+            vacinacoesFiltradasAtual = [...todasVacinacoes];
+            resultadoDiv.textContent = '';
+            resultadoDiv.className = 'resultado-filtro';
+            paginaAtual = 1;
+            renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+            return;
+        }
+
+        // Filtrar vacinações
+        vacinacoesFiltradasAtual = todasVacinacoes.filter(vac => {
+            const nomeVacina = normalizeText(vac.vacina?.nome || '');
+            return nomeVacina.includes(filtroTexto);
+        });
+
+        // Atualizar mensagem de resultado
+        if (vacinacoesFiltradasAtual.length > 0) {
+            resultadoDiv.textContent = `${vacinacoesFiltradasAtual.length} vacinação(ões) encontrada(s)`;
+            resultadoDiv.className = 'resultado-filtro tem-resultados';
+        } else {
+            resultadoDiv.textContent = 'Nenhuma vacinação encontrada com esse nome';
+            resultadoDiv.className = 'resultado-filtro sem-resultados';
+        }
+
+        paginaAtual = 1;
+        renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+    }
+
+    // Função para limpar filtro
+    function limparFiltro() {
+        const filtroInput = document.getElementById('filtro-vacina');
+        filtroInput.value = '';
+        filtrarVacinacoes();
+        filtroInput.focus();
+    }
+
+    // Função para renderizar a tabela de vacinações com paginação
+    function renderizarHistoricoVacinal(vacinacoes) {
+        const tbody = document.getElementById('historico-vacinacao-body');
+        const msgVazio = document.getElementById('historico-vacinacao-vazio');
+        
+        if (vacinacoes.length === 0) {
+            tbody.innerHTML = '';
+            msgVazio.style.display = 'block';
+            
+            const paginacaoExistente = document.querySelector('.paginacao-container');
+            if (paginacaoExistente) {
+                paginacaoExistente.remove();
+            }
+            return;
+        }
+
+        tbody.innerHTML = '';
+        msgVazio.style.display = 'none';
+
+        // Ordenar por data (mais recente primeiro)
+        const vacinacoesOrdenadas = [...vacinacoes].sort((a, b) => {
+            const dataA = new Date(a.dataAplicacao.split('/').reverse().join('-'));
+            const dataB = new Date(b.dataAplicacao.split('/').reverse().join('-'));
+            return dataB - dataA;
+        });
+
+        // Calcular índices para paginação
+        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+        const fim = inicio + ITENS_POR_PAGINA;
+        const vacinacoesPaginadas = vacinacoesOrdenadas.slice(inicio, fim);
+
+        // Renderizar apenas os itens da página atual
+        vacinacoesPaginadas.forEach(vacinacao => {
+            const row = tbody.insertRow();
+            
+            row.insertCell().textContent = vacinacao.vacina?.nome || 'N/A';
+            row.insertCell().textContent = formatDate(vacinacao.dataAplicacao) || 'N/A';
+            
+            const proximaDose = vacinacao.dataProximaDose 
+                ? formatDate(vacinacao.dataProximaDose) 
+                : 'Não há próxima dose agendada';
+            row.insertCell().textContent = proximaDose;
+            
+            row.insertCell().textContent = vacinacao.vacina?.numeroLote || 'N/A';
+            
+            const fabricante = vacinacao.vacina?.fabricante || 'N/A';
+            const fabricanteFormatado = fabricante.replace(/_/g, ' ')
+                .toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            row.insertCell().textContent = fabricanteFormatado;
+        });
+
+        criarPaginacao(vacinacoesOrdenadas.length);
+        console.log("✅ Histórico vacinal renderizado - Página", paginaAtual);
+    }
+
     // Função para buscar e exibir os dados do paciente
     async function buscarEExibirPaciente() {
         try {
             console.log("🔍 Buscando paciente com CPF:", cpf);
             
-            // 1. Buscar dados do paciente
             const respPessoa = await fetch(`${API_BASE}/pessoa/buscar-por-cpf`, {
                 method: "POST",
                 headers: {
@@ -68,12 +346,9 @@
             }
 
             const rawPessoa = await respPessoa.json();
-            console.log("📦 Resposta da API (pessoa):", rawPessoa);
             
-            // Extrair pessoa da resposta
             let pessoa = null;
             if (rawPessoa?.dados) {
-                // Se dados é um array
                 if (Array.isArray(rawPessoa.dados)) {
                     pessoa = rawPessoa.dados[0];
                 } else {
@@ -83,15 +358,13 @@
                 pessoa = rawPessoa;
             }
 
-            console.log("✅ Pessoa extraída:", pessoa);
-
             if (!pessoa || !pessoa.uuid) {
                 alert("Dados do paciente incompletos.");
                 window.location.href = "home.html";
                 return;
             }
 
-            // 2. Exibir dados pessoais
+            // Exibir dados pessoais
             document.getElementById('nome-completo').textContent = pessoa.nomeCompleto || 'N/A';
             document.getElementById('cpf').textContent = formatCpf(pessoa.cpf) || 'N/A';
             document.getElementById('data-nascimento').textContent = formatDate(pessoa.dataNascimento) || 'N/A';
@@ -101,98 +374,87 @@
             document.getElementById('comunidade').textContent = pessoa.comunidade || 'N/A';
             document.getElementById('comorbidade').textContent = pessoa.comorbidade || 'Nenhuma';
 
-            console.log("📋 Dados pessoais preenchidos com sucesso");
-
-            // 3. Tentar buscar histórico vacinal (se o endpoint existir)
+            // Buscar histórico vacinal
             try {
-                console.log("💉 Tentando buscar histórico vacinal...");
-                
-                // O endpoint correto para histórico é `/vacinacao/historico-paciente/{uuid}`.
-                // No entanto, o código atual busca todas as vacinações e tenta filtrar.
-                // Vamos manter a busca por todas as vacinações, mas com um endpoint mais genérico se o específico falhar.
-                // Se o endpoint `/vacinacao/historico-paciente/{uuid}` não funcionar, a busca por `/vacinacoes` é uma alternativa.
-                const respVacinacoes = await fetch(`${API_BASE}/vacinacao/historico-paciente/${pessoa.uuid}`, {
+                const respVacinacoes = await fetch(`${API_BASE}/vacinacoes?size=1000&page=0`, {
                     method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                    },
+                    headers: { "Authorization": `Bearer ${token}` },
                 });
 
-                if (respVacinacoes.ok) {
-                    const rawVacinacoes = await respVacinacoes.json();
-                    console.log("📦 Resposta da API (vacinações):", rawVacinacoes);
-                    
-                    let vacinacoes = [];
-                    if (rawVacinacoes?.dados) {
-                        vacinacoes = Array.isArray(rawVacinacoes.dados) ? rawVacinacoes.dados : [rawVacinacoes.dados];
-                    }
-
-                    // Filtrar vacinações do paciente
-                    const historicoFiltrado = vacinacoes.filter(v => v.pessoa.uuid === pessoa.uuid);
-
-                    if (historicoFiltrado.length > 0) {
-                        const tbody = document.getElementById('historico-vacinacao-body');
-                        tbody.innerHTML = ''; // Limpa qualquer conteúdo anterior
-
-                        historicoFiltrado.forEach(vacinacao => {
-                            const row = tbody.insertRow();
-                            // Variáveis confirmadas: vacina.nome, dose, dataAplicacao, lote, fabricante. Removido profissional.nome.
-                            row.insertCell().textContent = vacinacao.vacina.nome || 'N/A';
-                            row.insertCell().textContent = formatDate(vacinacao.dataAplicacao) || 'N/A';
-                            
-                            // Adicionando Data da Próxima Dose
-                            const proximaDose = vacinacao.dataProximaDose ? formatDate(vacinacao.dataProximaDose) : 'Não há próxima dose agendada';
-                            row.insertCell().textContent = proximaDose;
-                            
-                            row.insertCell().textContent = vacinacao.lote || 'N/A';
-                            row.insertCell().textContent = vacinacao.fabricante || 'N/A';
-                        });
-                        console.log("✅ Histórico vacinal preenchido com sucesso");
-                    } else {
-                        exibirHistoricoVazio();
-                    }
-                } else {
-                    exibirHistoricoVazio();
+                if (!respVacinacoes.ok) {
+                    renderizarHistoricoVacinal([]);
+                    return;
                 }
+
+                const rawVacinacoes = await respVacinacoes.json();
+                
+                let vacinacoes = [];
+                if (rawVacinacoes?.dados) {
+                    if (Array.isArray(rawVacinacoes.dados[0])) {
+                        vacinacoes = rawVacinacoes.dados[0];
+                    } else {
+                        vacinacoes = rawVacinacoes.dados;
+                    }
+                }
+
+                const vacinacoesCompletas = [];
+                
+                for (const vac of vacinacoes) {
+                    try {
+                        const respDetalhe = await fetch(`${API_BASE}/vacinacoes/${vac.uuid}`, {
+                            method: "GET",
+                            headers: { "Authorization": `Bearer ${token}` },
+                        });
+
+                        if (respDetalhe.ok) {
+                            const detalheRaw = await respDetalhe.json();
+                            
+                            let detalhe = null;
+                            if (detalheRaw?.dados) {
+                                if (Array.isArray(detalheRaw.dados)) {
+                                    detalhe = detalheRaw.dados[0];
+                                } else {
+                                    detalhe = detalheRaw.dados;
+                                }
+                            } else {
+                                detalhe = detalheRaw;
+                            }
+
+                            if (detalhe && detalhe.pessoa && detalhe.pessoa.uuid === pessoa.uuid) {
+                                vacinacoesCompletas.push(detalhe);
+                            }
+                        }
+                    } catch (err) {
+                        console.warn("❌ Erro ao buscar detalhe:", err);
+                    }
+                }
+
+                todasVacinacoes = vacinacoesCompletas;
+                vacinacoesFiltradasAtual = [...vacinacoesCompletas];
+                renderizarHistoricoVacinal(vacinacoesCompletas);
+
             } catch (err) {
-                console.warn("⚠️ Não foi possível buscar histórico vacinal:", err);
-                exibirHistoricoVazio();
+                console.error("❌ Erro ao buscar histórico:", err);
+                renderizarHistoricoVacinal([]);
             }
 
-            // 4. Configurar botão de registrar nova vacinação
+            // Configurar botão de registrar
             const btnRegistrar = document.getElementById('btn-registrar-vacinacao');
             if (btnRegistrar) {
                 btnRegistrar.addEventListener('click', () => {
-                    // Salvar dados do paciente no localStorage
                     localStorage.setItem("pacienteSelecionado", JSON.stringify(pessoa));
-                    // Redireciona para a página de registro
                     window.location.href = `registrar-vacinacao.html?cpf=${pessoa.cpf}`;
                 });
             }
 
         } catch (err) {
-            console.error("❌ Erro ao buscar dados do paciente:", err);
-            alert("Falha ao buscar dados do paciente. Tente novamente.");
+            console.error("❌ Erro geral:", err);
+            alert("Falha ao buscar dados do paciente.");
             window.location.href = "home.html";
         }
     }
 
-    function exibirHistoricoVazio() {
-        const tbody = document.getElementById('historico-vacinacao-body');
-        const msgVazio = document.getElementById('historico-vacinacao-vazio');
-        
-        if (tbody) {
-            tbody.innerHTML = '';
-        }
-        
-        if (msgVazio) {
-            msgVazio.style.display = 'block';
-        }
-        
-        console.log("📝 Exibindo mensagem de histórico vazio");
-    }
-
-    // Configurar botão voltar
+    // Configurar eventos
     const btnVoltar = document.querySelector('a[href="home.html"]');
     if (btnVoltar) {
         btnVoltar.addEventListener('click', (e) => {
@@ -202,7 +464,27 @@
         });
     }
 
-    // Inicia a busca
-    console.log("🚀 Iniciando busca do paciente...");
+    const filtroInput = document.getElementById('filtro-vacina');
+    const btnLimpar = document.getElementById('limpar-filtro');
+
+    if (filtroInput) {
+        let debounceTimer;
+        filtroInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(filtrarVacinacoes, 300);
+        });
+
+        filtroInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                filtrarVacinacoes();
+            }
+        });
+    }
+
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', limparFiltro);
+    }
+
     buscarEExibirPaciente();
 })();
