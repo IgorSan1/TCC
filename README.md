@@ -1,16 +1,16 @@
 # YaraVac 💉
 
-**Sistema inteligente de gerenciamento de vacinação para comunidades indígenas, transformando o cuidado em saúde com tecnologia acessível e eficiente.**
+**Sistema inteligente de gerenciamento de vacinação para comunidades remotas**
 
 ---
 
 ## 📋 Sobre o Projeto
 
 ### Descrição Breve
-YaraVac é uma solução completa de gestão de vacinação desenvolvida especialmente para atender comunidades indígenas. O sistema permite o cadastro de pacientes, registro de vacinações, controle de estoque de vacinas e acompanhamento do histórico vacinal de forma simples e intuitiva.
+YaraVac é uma solução completa de gestão de vacinação desenvolvida especialmente para atender comunidades remotas. O sistema permite o cadastro de pacientes, registro de vacinações e acompanhamento do histórico vacinal de forma simples e intuitiva.
 
 ### 🌟 O Que Torna Isso Especial
-- **Foco em Comunidades Indígenas**: Sistema pensado para as necessidades específicas das populações indígenas, com campos para etnia, comunidade e características culturais
+- **Foco em Comunidades Remotas**: Sistema pensado para as necessidades específicas das populações distantes, com campos para etnia, comunidade e características
 - **Segurança Robusta**: Autenticação JWT com controle de acesso baseado em roles (ADMIN e USER)
 - **Rastreabilidade Completa**: Histórico detalhado com informações de lote, fabricante e datas de doses
 - **Interface Intuitiva**: Design limpo e responsivo que facilita o uso por profissionais de saúde em campo
@@ -23,11 +23,9 @@ YaraVac é uma solução completa de gestão de vacinação desenvolvida especia
 - ✅ **Rastreamento**: Acompanhamento de próximas doses e histórico completo
 
 ### 🎯 Destaques Técnicos
-- **Arquitetura RESTful** com documentação Swagger/OpenAPI
-- **Paginação Inteligente**: Sistema de listagem com filtros e busca avançada
+- **Arquitetura REST** com documentação Swagger/OpenAPI
+- **Paginação Inteligente**: Sistema de listagem com filtros e busca
 - **Validações Robustas**: Verificação de CPF, CNS e dados obrigatórios
-- **Soft Delete**: Remoção lógica de registros mantendo histórico
-- **Auditoria Completa**: Timestamps automáticos de criação, atualização e remoção
 
 ---
 
@@ -39,7 +37,6 @@ YaraVac é uma solução completa de gestão de vacinação desenvolvida especia
 - Visão geral com estatísticas de vacinação
 - Ações rápidas para cadastros
 - Busca inteligente de pacientes
-- Indicadores de cobertura vacinal
 
 #### 2️⃣ **Gestão de Pacientes**
 - Cadastro completo com validações
@@ -114,13 +111,11 @@ Buscar por CPF → Detalhes do Paciente → Histórico Vacinal com Paginação e
 | Flyway | 10.10.0 | Migrações de banco de dados |
 | JWT (Auth0) | 4.5.0 | Tokens de autenticação |
 | MapStruct | 1.5.5 | Mapeamento de DTOs |
-| Lombok | 1.18.32 | Redução de boilerplate |
 | Springdoc OpenAPI | 2.1.0 | Documentação da API |
 
 **Destaques do Backend:**
 - 🏗️ Arquitetura em camadas (Controller → Service → Repository)
 - 🔐 Segurança com BCrypt e JWT
-- 📊 Soft delete para auditoria
 - 🔄 Transações gerenciadas
 - 📝 Logging estruturado com SLF4J
 - 🚀 Migrações versionadas com Flyway
@@ -134,7 +129,7 @@ Buscar por CPF → Detalhes do Paciente → Histórico Vacinal com Paginação e
 | Maven | Gerenciamento de dependências |
 | Docker | Containerização do PostgreSQL |
 | Git | Controle de versão |
-| IntelliJ IDEA | IDE recomendada |
+| IntelliJ IDEA | IDE |
 | Postman | Testes de API |
 | VS Code | Editor para frontend |
 
@@ -146,7 +141,6 @@ Buscar por CPF → Detalhes do Paciente → Histórico Vacinal com Paginação e
 - Java 21+
 - PostgreSQL 16+ (ou Docker)
 - Maven 3.9+
-- Navegador moderno
 
 ### **Backend**
 
@@ -183,7 +177,6 @@ mvn spring-boot:run
 ```bash
 cd Front_End
 # Abra login.html em um servidor local ou navegador
-# Recomendado: usar Live Server do VS Code
 ```
 
 2. **Credenciais padrão**
@@ -198,13 +191,6 @@ POST /auth/register
 ```
 
 ---
-
-## 📚 Documentação da API
-
-Após iniciar o backend, acesse:
-```
-http://localhost:8080/api/v1/swagger-ui.html
-```
 
 ### **Principais Endpoints**
 
@@ -249,45 +235,7 @@ http://localhost:8080/api/v1/swagger-ui.html
 - **CORS configurado**
 - **Validações em múltiplas camadas**
 - **SQL Injection protegido pelo JPA**
-- **Rate limiting no filtro de segurança**
 
 ---
 
-## 🎯 Roadmap Futuro
-
-- [ ] Dashboard com gráficos interativos
-- [ ] Notificações de doses atrasadas
-- [ ] Exportação de relatórios em PDF
-- [ ] Integração com e-SUS
-- [ ] Aplicativo mobile nativo
-- [ ] Sistema de alertas de estoque baixo
-- [ ] Módulo de relatórios epidemiológicos
-- [ ] Suporte a múltiplos idiomas indígenas
-
----
-
-## 👥 Contribuindo
-
-Contribuições são bem-vindas! Para contribuir:
-
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/NovaFuncionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
-5. Abra um Pull Request
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença [especificar licença].
-
----
-
-## 📧 Contato
-
-Para dúvidas ou sugestões, entre em contato através de [seu email ou meio de contato].
-
----
-
-**Desenvolvido com ❤️ para melhorar a saúde das comunidades indígenas brasileiras**
+## 👥 Autores
