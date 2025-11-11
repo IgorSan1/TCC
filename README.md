@@ -1,4 +1,4 @@
-<img width="375" height="67" alt="image" src="https://github.com/user-attachments/assets/9e070da6-dd43-4118-8b2e-5e02f03c1c85" /># YaraVac 💉
+# YaraVac 💉
 
 **Sistema inteligente de gerenciamento de vacinação para comunidades remotas**
 
