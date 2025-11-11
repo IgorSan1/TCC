@@ -1,4 +1,4 @@
-# YaraVac 💉
+<img width="375" height="67" alt="image" src="https://github.com/user-attachments/assets/9e070da6-dd43-4118-8b2e-5e02f03c1c85" /># YaraVac 💉
 
 **Sistema inteligente de gerenciamento de vacinação para comunidades remotas**
 
@@ -205,7 +205,7 @@ POST /auth/register
 - `POST /pessoa/buscar-por-cpf` - Buscar por CPF
 - `GET /pessoa` - Listar (paginado)
 - `PUT /pessoa/{uuid}` - Atualizar
-- `DELETE /pessoa/{uuid}` - Remover (soft delete)
+- `DELETE /pessoa/{uuid}` - Remover
 
 #### **Vacinas**
 - `POST /vacina` - Cadastrar vacina
@@ -238,4 +238,16 @@ POST /auth/register
 
 ---
 
-## 👥 Autores
+## 👨‍💻 Autores
+
+Projeto desenvolvido por quatro integrantes:
+
+| Nome | GitHub | LinkedIn | E-mail |
+|------|--------|----------|--------|
+| **Igor Santiago de Carvalho** | [IgorSan1](https://github.com/IgorSan1) | [Igor Santaigo](www.linkedin.com/in/igor-santiagoyt) | igor.sancar22@gmail.com |
+| **Alexandre Izumi Filho** | [Alexandre](https://github.com/Alex1zum1) | [Alexandre Izumi](https://www.linkedin.com/in/alexandre-izumi-3428b227b) | alexandreizumifilho@gmail.com |
+| **Vinicius Oliveira de Souza** | [Vinicius Oliveira](https://github.com/Vinicius7979) | [Vinicius Oliveira](https://www.linkedin.com/in/vinicius-oliveira-609804302) | iliveiravinicius2503@gmail.com |
+| **Bruno Rene Batista Goncalves** | [Bruno Rene](https://github.com/Brunorbg) | [Bruno Rene](https://www.linkedin.com/in/bruno-gonçalves-2978a3145) | brunorbgoncalves@gmail.com |
+
+Agradecimentos Especiais a nossa Orientadora:
+| **Luana Magalhães Leal** | [Luana Leal](https://github.com/ProfaLuanaLeal) | [Luana Leal](https://www.linkedin.com/in/luanalealm) | prof.luanalealm@gmail.com |
