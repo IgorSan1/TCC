@@ -250,4 +250,6 @@ Projeto desenvolvido por quatro integrantes:
 | **Bruno Rene Batista Goncalves** | [Bruno Rene](https://github.com/Brunorbg) | [Bruno Rene](https://www.linkedin.com/in/bruno-gonçalves-2978a3145) | brunorbgoncalves@gmail.com |
 
 Agradecimentos Especiais a nossa Orientadora:
+| Nome | GitHub | LinkedIn | E-mail |
+|------|--------|----------|--------|
 | **Luana Magalhães Leal** | [Luana Leal](https://github.com/ProfaLuanaLeal) | [Luana Leal](https://www.linkedin.com/in/luanalealm) | prof.luanalealm@gmail.com |
