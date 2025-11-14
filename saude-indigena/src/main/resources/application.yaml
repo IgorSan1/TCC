@@ -37,6 +37,8 @@ logging:
   level:
     root: INFO
     org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    com.saude_indigena.config: DEBUG
 
   file:
     name: logs/saude-indigena.log

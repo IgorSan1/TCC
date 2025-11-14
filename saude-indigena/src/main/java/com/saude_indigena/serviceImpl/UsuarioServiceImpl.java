@@ -4,7 +4,10 @@ import com.saude_indigena.dto.UsuarioAtualizacaoDTO;
 import com.saude_indigena.dto.UsuarioListagemDTO;
 import com.saude_indigena.excecoes.ObjetoNaoEncontradoException;
 import com.saude_indigena.excecoes.ValidacaoException;
+import com.saude_indigena.model.Admin;
+import com.saude_indigena.model.UserRole;
 import com.saude_indigena.model.Usuario;
+import com.saude_indigena.repository.AdminRepository;
 import com.saude_indigena.repository.UsuarioRepository;
 import com.saude_indigena.service.UsuarioService;
 import com.saude_indigena.util.Constantes;
@@ -24,9 +27,11 @@ import java.util.UUID;
 public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final AdminRepository adminRepository;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, AdminRepository adminRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.adminRepository = adminRepository;
     }
 
     @Transactional
@@ -36,20 +41,49 @@ public class UsuarioServiceImpl implements UsuarioService {
             // Validar antes de qualquer operação
             this.validar(usuario);
             
-            // Verificar se o usuário já existe
-            if (this.usuarioRepository.findByUsuario(usuario.getUsuario()) != null) {
-                log.error("Usuário já existe: {}", usuario.getUsuario());
-                throw new ValidacaoException("Usuário já cadastrado no sistema");
+            // ✅ VERIFICAR SE É ADMIN - salvar na tabela correta
+            if (usuario.getRole() == UserRole.ADMIN) {
+                log.info("🔐 Detectado role ADMIN - salvando na tabela 'admin'");
+                
+                // Verificar se já existe admin com esse usuário
+                if (this.adminRepository.findByUsuario(usuario.getUsuario()) != null) {
+                    log.error("Admin já existe: {}", usuario.getUsuario());
+                    throw new ValidacaoException("Usuário já cadastrado no sistema");
+                }
+                
+                // Criar Admin ao invés de Usuario
+                String encryptedPassword = new BCryptPasswordEncoder().encode(usuario.getPassword());
+                Admin admin = new Admin(usuario.getUsuario(), encryptedPassword, usuario.getRole());
+                
+                // Copiar dados adicionais se necessário
+                admin = this.adminRepository.save(admin);
+                log.info(Constantes.USUARIO_MSG_ADICIONADO + " como ADMIN: {}", admin.getUsuario());
+                
+                // Retornar um Usuario "fake" para manter a compatibilidade
+                // (o método retorna Usuario, mas salvamos como Admin)
+                usuario.setPassword(encryptedPassword);
+                return usuario;
+                
+            } else {
+                // ✅ É USER normal - salvar na tabela 'usuario'
+                log.info("👤 Detectado role USER - salvando na tabela 'usuario'");
+                
+                // Verificar se o usuário já existe
+                if (this.usuarioRepository.findByUsuario(usuario.getUsuario()) != null) {
+                    log.error("Usuário já existe: {}", usuario.getUsuario());
+                    throw new ValidacaoException("Usuário já cadastrado no sistema");
+                }
+
+                // Criptografar a senha
+                String encryptedPassword = new BCryptPasswordEncoder().encode(usuario.getPassword());
+                usuario.setPassword(encryptedPassword);
+
+                // Salvar o usuário
+                usuario = this.usuarioRepository.save(usuario);
+                log.info(Constantes.USUARIO_MSG_ADICIONADO + ": {}", usuario.getUsuario());
+                this.usuarioRepository.flush();
             }
-
-            // Criptografar a senha
-            String encryptedPassword = new BCryptPasswordEncoder().encode(usuario.getPassword());
-            usuario.setPassword(encryptedPassword);
-
-            // Salvar o usuário
-            usuario = this.usuarioRepository.save(usuario);
-            log.info(Constantes.USUARIO_MSG_ADICIONADO + ": {}", usuario.getUsuario());
-            this.usuarioRepository.flush();
+            
         } catch (DataIntegrityViolationException e) {
             log.error(Constantes.USUARIO_MSG_FALHA_AO_ADICIONAR + ": " + e.getMessage());
             if (e.getMessage().contains("cpf")) {
@@ -59,7 +93,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
             throw new ValidacaoException("Erro ao cadastrar usuário: dados duplicados");
         } catch (ValidacaoException e) {
-            // Re-lançar exceções de validação
             throw e;
         }
         return usuario;
@@ -79,7 +112,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setTelefone(dados.telefone());
             usuario.setUsuario(dados.usuario());
             
-            // Apenas atualizar senha se for fornecida
             if (dados.password() != null && !dados.password().isEmpty()) {
                 String encryptedPassword = new BCryptPasswordEncoder().encode(dados.password());
                 usuario.setPassword(encryptedPassword);
@@ -128,7 +160,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private void validar(Usuario usuario) {
-        // Validar campos obrigatórios
         if (usuario.getUsuario() == null || usuario.getUsuario().isEmpty() || usuario.getUsuario().isBlank()) {
             log.error("Campo 'usuário' inválido");
             throw new ValidacaoException("Campo 'usuário' é obrigatório");
@@ -164,7 +195,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new ValidacaoException("Campo 'email' é obrigatório");
         }
         
-        // Validar formato do email
         if (!usuario.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             log.error("Email com formato inválido: {}", usuario.getEmail());
             throw new ValidacaoException("Email com formato inválido");

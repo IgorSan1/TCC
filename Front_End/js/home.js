@@ -58,7 +58,7 @@
     // Chamar função ao carregar a página
     atualizarNomeUsuario();
 
-    // Verificar se o usuário é ADMIN e exibir o botão de cadastro de usuários
+    // ✅ CORRIGIDO: Verificar se o usuário é ADMIN e exibir o botão de cadastro de usuários
     verificarPermissaoAdmin();
 
     function verificarPermissaoAdmin() {
@@ -71,17 +71,17 @@
         const decodedToken = decodeJWT(token);
         const role = decodedToken?.role;
 
+        console.log("🔐 Role do usuário:", role);
+
+        // ✅ APENAS se for ADMIN, mostrar o botão de cadastro de usuário
         const btnCadastroUsuario = document.getElementById("btnCadastroUsuario");
-        
-        // Se for ADMIN, mostrar o botão
-        if (role === 'ADMIN') {
-            if (btnCadastroUsuario) {
-                btnCadastroUsuario.style.display = "block";
-            }
-        } else {
-            // Se NÃO for ADMIN, ocultar o botão
-            if (btnCadastroUsuario) {
+        if (btnCadastroUsuario) {
+            if (role === 'ADMIN') {
+                btnCadastroUsuario.style.display = "";
+                console.log("✅ Botão de cadastro de usuário VISÍVEL (ADMIN)");
+            } else {
                 btnCadastroUsuario.style.display = "none";
+                console.log("🚫 Botão de cadastro de usuário OCULTO (não é ADMIN)");
             }
         }
     }
