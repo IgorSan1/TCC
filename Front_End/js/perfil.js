@@ -122,6 +122,8 @@
         console.log("👤 Usuário logado:", username, "| Role:", role, "| Is Admin:", isAdmin);
 
         try {
+            // ✅ CORREÇÃO: Se for ADMIN, buscar na lista de usuários mesmo assim
+            // pois o backend retorna apenas da tabela 'usuario'
             const resp = await fetch(`${API_BASE}/usuario?size=1000&page=0`, {
                 method: "GET",
                 headers: {
@@ -132,6 +134,7 @@
 
             if (!resp.ok) {
                 console.error("Erro ao carregar perfil:", resp.status);
+                // ✅ Se não encontrou na tabela usuario, preencher dados básicos do token
                 preencherPerfilDoToken(decodedToken);
                 return;
             }
@@ -149,11 +152,14 @@
             const usuario = usuarios.find(u => u.usuario === username);
 
             if (usuario) {
-                console.log("✅ Usuário encontrado:", usuario);
+                console.log("✅ Usuário encontrado na tabela usuario:", usuario);
                 usuarioAtual = usuario;
                 preencherPerfil(usuario);
             } else {
-                console.warn("⚠️ Usuário não encontrado na lista");
+                // ✅ Se for ADMIN e não encontrou na tabela usuario, 
+                // mostrar dados do token (admin puro, sem registro em usuario)
+                console.warn("⚠️ Usuário ADMIN não encontrado na tabela usuario");
+                console.log("📝 Preenchendo dados básicos do token");
                 preencherPerfilDoToken(decodedToken);
             }
         } catch (err) {
@@ -163,14 +169,63 @@
     }
 
     function preencherPerfilDoToken(decodedToken) {
-        console.log("📝 Preenchendo perfil a partir do token");
+        console.log("📝 Preenchendo perfil a partir do token (ADMIN puro)");
         
         const headerUserSpan = document.querySelector(".user-profile span");
         if (headerUserSpan) {
-            headerUserSpan.textContent = decodedToken.sub || "Usuário";
+            headerUserSpan.textContent = decodedToken.sub || "Administrador";
         }
 
+        // Preencher apenas o campo de usuário
         document.getElementById('view-usuario').value = decodedToken.sub || "";
+        
+        // ✅ Para ADMIN puro (sem registro completo), mostrar mensagem informativa
+        if (isAdmin) {
+            // Ocultar campos vazios e mostrar mensagem
+            const perfilCard = document.querySelector('.profile-card');
+            
+            // Adicionar aviso no início do card
+            const avisoDiv = document.createElement('div');
+            avisoDiv.className = 'info-box';
+            avisoDiv.style.cssText = `
+                background: #fff9e6;
+                border-left: 4px solid #ffc107;
+                padding: 1rem;
+                border-radius: 8px;
+                margin-bottom: 1.5rem;
+            `;
+            avisoDiv.innerHTML = `
+                <strong style="color: #856404; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-circle-info"></i> Perfil Administrativo
+                </strong>
+                <p style="margin-top: 0.5rem; color: #212529; font-size: 0.9rem;">
+                    Você está logado como <strong>Administrador do Sistema</strong>. 
+                    Este perfil não possui informações detalhadas cadastradas.
+                    <br><br>
+                    Para ter um perfil completo com todas as informações, cadastre-se como usuário através da página 
+                    <a href="cadastrar-usuario.html" style="color: #007BFF; font-weight: 600;">Cadastrar Usuário</a> 
+                    e selecione o perfil ADMIN.
+                </p>
+            `;
+            
+            // Inserir após o header
+            const profileHeader = perfilCard.querySelector('.profile-header');
+            profileHeader.after(avisoDiv);
+            
+            // Ocultar botão de editar para admin puro
+            const btnEditar = document.getElementById('btn-editar-perfil');
+            if (btnEditar) {
+                btnEditar.style.display = 'none';
+            }
+            
+            // Limpar campos que não temos dados
+            document.getElementById('view-cpf').value = "N/A";
+            document.getElementById('view-data-nascimento').value = "N/A";
+            document.getElementById('view-nome-completo').value = decodedToken.sub || "Administrador";
+            document.getElementById('view-email').value = "N/A";
+            document.getElementById('view-telefone').value = "N/A";
+            document.getElementById('view-cargo').value = "Administrador do Sistema";
+        }
     }
 
     function preencherPerfil(usuario) {
@@ -193,7 +248,7 @@
     // ===== MODAL DE EDIÇÃO =====
     window.abrirModalEdicaoPerfil = function() {
         if (!usuarioAtual) {
-            alert("Erro: Dados do usuário não disponíveis.");
+            alert("Erro: Perfil não disponível para edição. Apenas usuários com cadastro completo podem editar o perfil.");
             return;
         }
 
@@ -242,14 +297,12 @@
         const avisoSenha = document.getElementById('aviso-senha-bloqueada');
         
         if (isAdmin) {
-            // ADMIN pode alterar senha
             secaoSeguranca.style.display = 'block';
             campoSenha.disabled = false;
             campoConfirmarSenha.disabled = false;
             avisoSenha.style.display = 'none';
             console.log("✅ ADMIN - Alteração de senha PERMITIDA");
         } else {
-            // USER não pode alterar senha - ocultar seção inteira
             secaoSeguranca.style.display = 'none';
             campoSenha.disabled = true;
             campoConfirmarSenha.disabled = true;
@@ -275,6 +328,11 @@
     // ===== SUBMISSÃO DO FORMULÁRIO =====
     document.getElementById('form-editar-perfil').addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        if (!usuarioAtual) {
+            alert("Erro: Não é possível editar este perfil.");
+            return;
+        }
 
         const usuarioUuid = document.getElementById('edit-usuario-uuid').value;
         const usuario = document.getElementById('edit-usuario').value.trim();
@@ -310,7 +368,7 @@
                 alert("A senha deve ter pelo menos 4 caracteres.");
                 return;
             }
-            novaSenha = senha; // Apenas se ADMIN preencheu uma nova senha
+            novaSenha = senha;
         }
 
         // Converter data
@@ -322,7 +380,6 @@
         // Usar role original do usuarioAtual
         const role = usuarioAtual.role;
 
-        // ✅ CORRIGIDO: Não enviar campo password se não for alterado
         const payload = {
             nomeCompleto,
             cpf,

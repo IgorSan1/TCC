@@ -36,7 +36,6 @@
         }
     }
 
-    // Verificar permissão antes de continuar
     if (!verificarPermissaoAdmin()) {
         return;
     }
@@ -67,6 +66,27 @@
             'TECNICO_DE_ENFERMAGEM': 'Técnico de Enfermagem'
         };
         return cargos[cargo] || cargo;
+    }
+
+    function formatarDataParaInput(data) {
+        if (!data) return "";
+        
+        if (data.includes('/')) {
+            const [dia, mes, ano] = data.split('/');
+            return `${ano}-${mes}-${dia}`;
+        }
+        
+        if (data.includes('-')) {
+            return data.split('T')[0];
+        }
+        
+        return "";
+    }
+
+    function formatDateToDDMMYYYY(isoDate) {
+        if (!isoDate) return null;
+        const [y, m, d] = isoDate.split("-");
+        return `${d}/${m}/${y}`;
     }
 
     function normalizeText(text) {
@@ -103,7 +123,6 @@
             const data = await response.json();
             console.log("📦 Resposta da API:", data);
 
-            // Normalizar resposta
             let usuarios = [];
             if (Array.isArray(data?.dados) && Array.isArray(data.dados[0])) {
                 usuarios = data.dados[0];
@@ -134,14 +153,24 @@
         if (usuarios.length === 0) {
             tbody.innerHTML = '';
             msgVazio.style.display = 'block';
+            removerPaginacao();
             return;
         }
 
         tbody.innerHTML = '';
         msgVazio.style.display = 'none';
 
-        // Ordenar por nome
+        // ✅ Ordenar do mais recente ao mais antigo (por createdAt ou ID)
         const usuariosOrdenados = [...usuarios].sort((a, b) => {
+            // Primeiro tenta ordenar por data de criação
+            if (a.createdAt && b.createdAt) {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            // Se não tiver createdAt, ordena por ID (maior ID = mais recente)
+            if (a.id && b.id) {
+                return b.id - a.id;
+            }
+            // Fallback: ordena por nome
             return a.nomeCompleto.localeCompare(b.nomeCompleto);
         });
 
@@ -173,29 +202,195 @@
 
             // Telefone
             row.insertCell().textContent = formatarTelefone(usuario.telefone);
+
+            // ✅ AÇÕES - ADICIONAR BOTÕES DE EDITAR E EXCLUIR
+            const cellAcoes = row.insertCell();
+            cellAcoes.className = 'action-buttons-cell';
+            
+            const actionDiv = document.createElement('div');
+            actionDiv.style.cssText = 'display: flex; gap: 8px; justify-content: center; align-items: center;';
+            
+            // Botão Editar
+            const btnEditar = document.createElement('button');
+            btnEditar.className = 'btn-action btn-edit';
+            btnEditar.innerHTML = '<i class="fa-solid fa-edit"></i> Editar';
+            btnEditar.title = 'Editar usuário';
+            btnEditar.onclick = () => abrirModalEdicaoUsuario(usuario);
+            
+            // Botão Excluir
+            const btnExcluir = document.createElement('button');
+            btnExcluir.className = 'btn-action btn-delete';
+            btnExcluir.innerHTML = '<i class="fa-solid fa-trash"></i> Excluir';
+            btnExcluir.title = 'Excluir usuário';
+            btnExcluir.onclick = () => excluirUsuario(usuario.uuid, usuario.nomeCompleto);
+            
+            actionDiv.appendChild(btnEditar);
+            actionDiv.appendChild(btnExcluir);
+            cellAcoes.appendChild(actionDiv);
         });
 
         console.log(`✅ ${usuarios.length} usuários renderizados na tabela`);
     }
 
+    // ===== MODAL DE EDIÇÃO =====
+    window.abrirModalEdicaoUsuario = function(usuario) {
+        console.log("📝 Abrindo modal de edição:", usuario);
+        
+        usuarioEmEdicao = usuario;
+        
+        document.getElementById('edit-usuario-uuid').value = usuario.uuid;
+        document.getElementById('edit-usuario-nome').value = usuario.usuario || '';
+        document.getElementById('edit-usuario-cpf').value = formatarCpf(usuario.cpf) || '';
+        
+        const dataNasc = formatarDataParaInput(usuario.dataNascimento);
+        document.getElementById('edit-usuario-data-nascimento').value = dataNasc;
+        
+        document.getElementById('edit-usuario-nome-completo').value = usuario.nomeCompleto || '';
+        document.getElementById('edit-usuario-email').value = usuario.email || '';
+        document.getElementById('edit-usuario-telefone').value = usuario.telefone || '';
+        document.getElementById('edit-usuario-cargo').value = usuario.cargo || '';
+        document.getElementById('edit-usuario-role').value = usuario.role || '';
+        
+        // Limpar campos de senha
+        document.getElementById('edit-usuario-senha').value = '';
+        document.getElementById('edit-usuario-confirmar-senha').value = '';
+        
+        document.getElementById('modal-editar-usuario').style.display = 'flex';
+    };
+
+    window.fecharModalEdicaoUsuario = function() {
+        document.getElementById('modal-editar-usuario').style.display = 'none';
+        document.getElementById('form-editar-usuario').reset();
+        usuarioEmEdicao = null;
+    };
+
+    // ===== SUBMISSÃO DO FORMULÁRIO DE EDIÇÃO =====
+    document.getElementById('form-editar-usuario').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const usuarioUuid = document.getElementById('edit-usuario-uuid').value;
+        const usuario = document.getElementById('edit-usuario-nome').value.trim();
+        const nomeCompleto = document.getElementById('edit-usuario-nome-completo').value.trim();
+        const email = document.getElementById('edit-usuario-email').value.trim();
+        const telefone = document.getElementById('edit-usuario-telefone').value.replace(/\D/g, '');
+        const dataNascimentoInput = document.getElementById('edit-usuario-data-nascimento').value;
+        const cargo = document.getElementById('edit-usuario-cargo').value;
+        const role = document.getElementById('edit-usuario-role').value;
+        const senha = document.getElementById('edit-usuario-senha').value;
+        const confirmarSenha = document.getElementById('edit-usuario-confirmar-senha').value;
+
+        // Validações
+        if (!usuario || !nomeCompleto || !email || !dataNascimentoInput || !cargo || !role) {
+            alert("Por favor, preencha todos os campos obrigatórios.");
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert("Por favor, informe um e-mail válido.");
+            return;
+        }
+
+        if (senha && senha !== confirmarSenha) {
+            alert("As senhas não coincidem.");
+            return;
+        }
+
+        if (senha && senha.length < 4) {
+            alert("A senha deve ter pelo menos 4 caracteres.");
+            return;
+        }
+
+        const dataNascimento = formatDateToDDMMYYYY(dataNascimentoInput);
+        const cpf = usuarioEmEdicao.cpf;
+
+        const payload = {
+            nomeCompleto,
+            cpf,
+            dataNascimento,
+            email,
+            telefone,
+            usuario,
+            role,
+            cargo
+        };
+
+        if (senha) {
+            payload.password = senha;
+        }
+
+        console.log("📤 Atualizando usuário:", payload);
+
+        try {
+            const response = await fetch(`${API_BASE}/usuario/${usuarioUuid}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert("Usuário atualizado com sucesso!");
+                fecharModalEdicaoUsuario();
+                await carregarUsuarios();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`Erro ao atualizar usuário: ${errorData.mensagem || response.statusText}`);
+            }
+        } catch (error) {
+            console.error("❌ Erro ao atualizar usuário:", error);
+            alert("Erro ao conectar com o servidor.");
+        }
+    });
+
+    // ===== FUNÇÃO PARA EXCLUIR USUÁRIO =====
+    window.excluirUsuario = async function(uuid, nomeCompleto) {
+        const confirmacao = confirm(
+            `Tem certeza que deseja excluir o usuário "${nomeCompleto}"?\n\n` +
+            `Esta ação não pode ser desfeita.`
+        );
+
+        if (!confirmacao) return;
+
+        console.log("🗑️ Excluindo usuário:", uuid);
+
+        try {
+            const response = await fetch(`${API_BASE}/usuario/${uuid}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok || response.status === 204) {
+                alert("Usuário excluído com sucesso!");
+                await carregarUsuarios();
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`Erro ao excluir usuário: ${errorData.mensagem || response.statusText}`);
+            }
+        } catch (error) {
+            console.error("❌ Erro ao excluir usuário:", error);
+            alert("Erro ao conectar com o servidor.");
+        }
+    };
+
     // ===== FILTRAR USUÁRIOS =====
     function filtrarUsuarios() {
         const filtroTexto = normalizeText(document.getElementById('filtro-usuario').value.trim());
         const filtroCargo = document.getElementById('filtro-cargo').value;
-        const filtroRole = document.getElementById('filtro-role').value;
         const resultadoDiv = document.getElementById('resultado-filtro');
         const btnLimpar = document.getElementById('limpar-filtro');
 
-        // Mostrar/ocultar botão limpar
-        if (filtroTexto.length > 0 || filtroCargo || filtroRole) {
+        if (filtroTexto.length > 0 || filtroCargo) {
             btnLimpar.style.display = 'flex';
         } else {
             btnLimpar.style.display = 'none';
         }
 
-        // Aplicar filtros
         usuariosFiltrados = todosUsuarios.filter(usuario => {
-            // Filtro de texto (busca em nome, usuário, CPF e e-mail)
             let passaFiltroTexto = true;
             if (filtroTexto) {
                 const nome = normalizeText(usuario.nomeCompleto || '');
@@ -209,23 +404,15 @@
                                    email.includes(filtroTexto);
             }
 
-            // Filtro de cargo
             let passaFiltroCargo = true;
             if (filtroCargo) {
                 passaFiltroCargo = usuario.cargo === filtroCargo;
             }
 
-            // Filtro de role
-            let passaFiltroRole = true;
-            if (filtroRole) {
-                passaFiltroRole = usuario.role === filtroRole;
-            }
-
-            return passaFiltroTexto && passaFiltroCargo && passaFiltroRole;
+            return passaFiltroTexto && passaFiltroCargo;
         });
 
-        // Atualizar mensagem de resultado
-        if (filtroTexto || filtroCargo || filtroRole) {
+        if (filtroTexto || filtroCargo) {
             if (usuariosFiltrados.length > 0) {
                 resultadoDiv.textContent = `${usuariosFiltrados.length} usuário(s) encontrado(s)`;
                 resultadoDiv.className = 'resultado-filtro tem-resultados';
@@ -241,11 +428,9 @@
         renderizarTabela(usuariosFiltrados);
     }
 
-    // ===== LIMPAR FILTROS =====
     function limparFiltros() {
         document.getElementById('filtro-usuario').value = '';
         document.getElementById('filtro-cargo').value = '';
-        document.getElementById('filtro-role').value = '';
         filtrarUsuarios();
         document.getElementById('filtro-usuario').focus();
     }
@@ -253,7 +438,6 @@
     // ===== EVENTOS =====
     const filtroInput = document.getElementById('filtro-usuario');
     const filtroCargo = document.getElementById('filtro-cargo');
-    const filtroRole = document.getElementById('filtro-role');
     const btnLimpar = document.getElementById('limpar-filtro');
 
     if (filtroInput) {
@@ -275,13 +459,36 @@
         filtroCargo.addEventListener('change', filtrarUsuarios);
     }
 
-    if (filtroRole) {
-        filtroRole.addEventListener('change', filtrarUsuarios);
-    }
-
     if (btnLimpar) {
         btnLimpar.addEventListener('click', limparFiltros);
     }
+
+    // Máscaras
+    const telefoneInput = document.getElementById('edit-usuario-telefone');
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, "");
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length === 0) {
+                e.target.value = "";
+            } else if (value.length <= 2) {
+                e.target.value = `(${value}`;
+            } else if (value.length <= 7) {
+                e.target.value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+            } else {
+                e.target.value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+            }
+        });
+    }
+
+    // Fechar modal ao clicar fora
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('modal-editar-usuario');
+        if (e.target === modal) {
+            fecharModalEdicaoUsuario();
+        }
+    });
 
     // ===== INICIALIZAR =====
     carregarUsuarios();
