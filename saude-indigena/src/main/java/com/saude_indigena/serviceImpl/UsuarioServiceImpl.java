@@ -115,6 +115,9 @@ public class UsuarioServiceImpl implements UsuarioService {
             if (dados.password() != null && !dados.password().isEmpty()) {
                 String encryptedPassword = new BCryptPasswordEncoder().encode(dados.password());
                 usuario.setPassword(encryptedPassword);
+                log.info("Senha atualizada para o usuário: {}", usuario.getUsuario());
+            } else {
+                log.info("Senha não foi alterada para o usuário: {}", usuario.getUsuario());
             }
             
             usuario.setCargo(dados.cargo());
@@ -227,6 +230,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (dados.email() == null || dados.email().isEmpty() || dados.email().isBlank()) {
             log.error("Campo 'email' inválido na atualização");
             throw new ValidacaoException("Campo 'email' é obrigatório");
+        }
+
+        if (dados.password() != null && !dados.password().isEmpty()) {
+            if (dados.password().length() < 4) {
+                log.error("Senha com tamanho inválido na atualização");
+                throw new ValidacaoException("Senha deve ter pelo menos 4 caracteres");
+            }
         }
     }
 }

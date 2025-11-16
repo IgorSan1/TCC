@@ -13,7 +13,7 @@ public record UsuarioAtualizacaoDTO(@NotBlank String nomeCompleto,
                                     @NotBlank String email,
                                     @NotBlank String telefone,
                                     @NotBlank String usuario,
-                                    @NotBlank String password,
+                                    String password,
                                     @NotBlank UserRole role,
                                     @NotBlank Cargo cargo) {
 }
