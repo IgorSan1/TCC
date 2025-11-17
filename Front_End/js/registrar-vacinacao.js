@@ -1,5 +1,6 @@
 (function(){
-    const API_BASE = "http://localhost:8080/api/v1";
+    const API_BASE = 'http://localhost:8080/api/v1';
+    const form = document.getElementById('form-registrar-vacinacao');
     const listaVacinas = document.getElementById("lista-vacinas");
     const vacinaNomeInput = document.getElementById("vacina-nome");
     const vacinaUuidInput = document.getElementById("vacina-uuid");
@@ -9,7 +10,7 @@
     let debounceId;
 
     function formatDateToDDMMYYYY(isoDate) {
-        if (!isoDate) return "";
+        if (!isoDate) return null;
         const [y, m, d] = isoDate.split("-");
         return `${d}/${m}/${y}`;
     }
@@ -27,7 +28,7 @@
         return out;
     }
 
-    // Aplicar máscara de CPF - CORREÇÃO DO ERRO AQUI
+    // Aplicar máscara de CPF
     pessoaCpfInput.addEventListener("input", () => {
         pessoaCpfInput.value = applyCpfMask(pessoaCpfInput.value);
     });
@@ -155,8 +156,10 @@
         }
     }
 
-    document.getElementById("form-registrar-vacinacao").addEventListener("submit", async function (e) {
+    form.addEventListener("submit", async function (e) {
         e.preventDefault();
+        
+        console.log("📝 Iniciando registro de vacinação...");
         
         const aplicacaoRaw = document.getElementById("aplicacao").value;
         if (!aplicacaoRaw) {
@@ -166,7 +169,11 @@
         const dataAplicacao = formatDateToDDMMYYYY(aplicacaoRaw);
         
         const proximaRaw = document.getElementById("proxima").value;
+        
         const dataProximaDose = proximaRaw ? formatDateToDDMMYYYY(proximaRaw) : null;
+        
+        console.log("📅 Data de aplicação:", dataAplicacao);
+        console.log("📅 Data próxima dose:", dataProximaDose || "Não informada");
 
         const token = localStorage.getItem("token");
         if (!token) {
@@ -184,6 +191,8 @@
             }
 
             try {
+                console.log("🔍 Buscando paciente por CPF:", cpfDigits);
+                
                 const respPessoa = await fetch(`${API_BASE}/pessoa/buscar-por-cpf`, {
                     method: "POST",
                     headers: {
@@ -216,8 +225,10 @@
                     alert("Paciente não encontrado (UUID ausente).");
                     return;
                 }
+                
+                console.log("✅ Paciente encontrado:", pessoa.nomeCompleto);
             } catch (err) {
-                console.error("Falha ao buscar paciente por CPF:", err);
+                console.error("❌ Falha ao buscar paciente por CPF:", err);
                 alert("Falha ao buscar paciente por CPF.");
                 return;
             }
@@ -231,16 +242,19 @@
         const payload = {
             pessoaUuid: pessoaUuidInput.value.trim(),
             vacinaUuid: vacinaUuidInput.value.trim(),
-            dataAplicacao,
-            dataProximaDose: dataProximaDose || null,
+            dataAplicacao: dataAplicacao
         };
+
+        if (dataProximaDose) {
+            payload.dataProximaDose = dataProximaDose;
+        }
 
         if (!payload.pessoaUuid || !payload.vacinaUuid || !payload.dataAplicacao) {
             alert("Preencha Pessoa UUID, Vacina UUID e a data de aplicação.");
             return;
         }
 
-        console.log("📤 Enviando payload:", payload);
+        console.log("📤 Enviando payload:", JSON.stringify(payload, null, 2));
 
         try {
             const resp = await fetch(`${API_BASE}/vacinacoes/registrar`, {
@@ -252,19 +266,22 @@
                 body: JSON.stringify(payload),
             });
             
+            console.log("📥 Status da resposta:", resp.status);
+            
             const data = await resp.json().catch(() => ({}));
             
             if (!resp.ok) {
-                console.error("Erro na resposta:", data);
+                console.error("❌ Erro na resposta:", data);
                 alert(`Erro ao registrar vacinação: ${data?.mensagem || resp.status}`);
                 return;
             }
             
+            console.log("✅ Vacinação registrada com sucesso:", data);
             alert("Vacinação registrada com sucesso!");
-            localStorage.removeItem("pacienteSelecionado"); // Limpar dados temporários
+            localStorage.removeItem("pacienteSelecionado");
             window.location.href = "home.html";
         } catch (err) {
-            console.error("Erro ao registrar vacinação:", err);
+            console.error("❌ Erro ao registrar vacinação:", err);
             alert("Falha de comunicação com o servidor.");
         }
     });

@@ -5,7 +5,7 @@ CREATE TABLE saude.vacinacao
     pessoa_id           BIGINT                          NOT NULL,
     vacina_id           BIGINT                          NOT NULL,
     data_aplicacao      TIMESTAMP WITH TIME ZONE        NOT NULL,
-    data_proxima_dose   TIMESTAMP WITH TIME ZONE        NOT NULL,
+    data_proxima_dose   TIMESTAMP WITH TIME ZONE,
 
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE,
