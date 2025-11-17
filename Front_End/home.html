@@ -46,6 +46,7 @@
         </div>
 
         <div class="dashboard-grid">
+            <!-- AÇÕES RÁPIDAS -->
             <div class="card grid-col-span-3">
                 <h3 class="card-title">Ações rápidas</h3>
                 <div class="quick-actions-container">
@@ -82,71 +83,44 @@
                 </div>
             </div>
 
-            <div class="card stat-card">
-                <h3 class="card-title">Pacientes Registrados</h3>
-                <h3 class="blue">2.847</h3>
-            </div>
-
-            <div class="card stat-card">
-                <h3 class="card-title">Vacinas aplicadas no dia</h3>
-                <h3 class="green">156</h3>
-            </div>
-
-            <div class="card coverage-card grid-col-span-2">
-                <div class="progress-circle">
-                    <div class="percent">78%</div>
-                </div>
-                <div class="progress-bar-group">
-                    <h3 class="card-title">Cobertura de vacinação</h3>
-                    <div class="progress-item">
-                        <div class="progress-label"><span>Vacina-1</span><span>65%</span></div>
-                        <div class="progress-bar">
-                            <div class="value" style="width: 65%;"></div>
-                            <div class="remainder" style="width: 35%;"></div>
-                        </div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-label"><span>Vacina-2</span><span>72%</span></div>
-                        <div class="progress-bar">
-                            <div class="value" style="width: 72%;"></div>
-                            <div class="remainder" style="width: 28%;"></div>
-                        </div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-label"><span>Vacina-3</span><span>91%</span></div>
-                        <div class="progress-bar">
-                            <div class="value" style="width: 91%;"></div>
-                            <div class="remainder" style="width: 9%;"></div>
-                        </div>
-                    </div>
+            <!-- GRÁFICO 1: VACINAÇÕES POR PERÍODO -->
+            <div class="card grid-col-span-2">
+                <h3 class="card-title">Vacinações nos Últimos 30 Dias</h3>
+                <div class="chart-container">
+                    <canvas id="graficoVacinacoesPeriodo" width="600" height="300"></canvas>
                 </div>
             </div>
 
+            <!-- GRÁFICO 2: TOP 5 VACINAS -->
             <div class="card">
-                <h3 class="card-title">Notificações e alertas</h3>
-                <div class="notifications-list">
-                    <div class="notification-item">
-                        <div class="placeholder p-80"></div>
-                    </div>
-                    <div class="notification-item">
-                        <div class="placeholder p-60"></div>
-                    </div>
-                    <div class="notification-item">
-                        <div class="placeholder p-80"></div>
-                    </div>
-                    <div class="notification-item">
-                        <div class="placeholder p-60"></div>
-                    </div>
+                <h3 class="card-title">Top 5 Vacinas Mais Aplicadas</h3>
+                <div class="chart-container">
+                    <div id="graficoTopVacinas" class="bar-chart-horizontal"></div>
                 </div>
-                <a href="notificacoes.html" class="view-all-link">
-                    <span>Ver todas as notificações</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
+            </div>
+
+            <!-- GRÁFICO 3: DISTRIBUIÇÃO POR FAIXA ETÁRIA -->
+            <div class="card">
+                <h3 class="card-title">Distribuição por Faixa Etária</h3>
+                <div class="chart-container">
+                    <canvas id="graficoFaixaEtaria" width="300" height="300"></canvas>
+                </div>
+                <div id="legendaFaixaEtaria" class="chart-legend"></div>
+            </div>
+
+            <!-- GRÁFICO 4: CADASTRADOS VS VACINADOS -->
+            <div class="card grid-col-span-2">
+                <h3 class="card-title">Pessoas Cadastradas vs Pessoas Vacinadas</h3>
+                <div class="chart-container">
+                    <div id="graficoCadastradosVacinados" class="comparison-chart"></div>
+                </div>
             </div>
         </div>
     </main>
+    
     <script src="js/header-user.js"></script>
     <script src="js/home.js"></script>
+    <script src="js/home-graficos.js"></script>
 </body>
 
 </html>
