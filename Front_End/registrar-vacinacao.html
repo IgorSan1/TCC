@@ -14,13 +14,84 @@
 <body>
     <header class="main-header">
         <a href="home.html" class="logo-container">
-            <img src="assets/logo.png" alt="YaraVac Logo">
+            <img src="assets/logo.png" alt="YaraVac Logo" />
             <h1>YaraVac</h1>
         </a>
+
+        <nav class="main-nav" id="main-nav">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="home.html" class="nav-link">
+                        <i class="fa-solid fa-home"></i>
+                        <span>Home</span>
+                    </a>
+                </li>
+
+                <li class="nav-item has-dropdown" id="nav-pacientes">
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Pacientes</span>
+                        <i class="fa-solid fa-chevron-down dropdown-indicator"></i>
+                    </a>
+                    <div class="nav-dropdown" id="dropdown-pacientes">
+                        <a href="cadastrar-paciente.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Cadastrar Paciente</span>
+                        </a>
+                    </div>
+                </li>
+
+                <li class="nav-item has-dropdown" id="nav-vacinas">
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-syringe"></i>
+                        <span>Vacinas</span>
+                        <i class="fa-solid fa-chevron-down dropdown-indicator"></i>
+                    </a>
+                    <div class="nav-dropdown" id="dropdown-vacinas">
+                        <a href="cadastrar-vacina.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Cadastrar Vacina</span>
+                        </a>
+                        <a href="listar-vacinas.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-list"></i>
+                            <span>Listar Vacinas</span>
+                        </a>
+                        <div class="nav-dropdown-divider"></div>
+                        <a href="registrar-vacinacao.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-pencil"></i>
+                            <span>Registrar Vacinação</span>
+                        </a>
+                    </div>
+                </li>
+
+                <li class="nav-item has-dropdown" id="nav-admin" style="display: none;">
+                    <a href="#" class="nav-link">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Administração</span>
+                        <i class="fa-solid fa-chevron-down dropdown-indicator"></i>
+                    </a>
+                    <div class="nav-dropdown" id="dropdown-admin">
+                        <a href="cadastrar-usuario.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Cadastrar Usuário</span>
+                        </a>
+                        <a href="listar-usuarios.html" class="nav-dropdown-item">
+                            <i class="fa-solid fa-users-gear"></i>
+                            <span>Listar Usuários</span>
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+
+        <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
         <div class="user-actions">
             <a href="perfil.html" class="user-profile">
                 <i class="fa-regular fa-user"></i>
-                <span>Usuario@123</span>
+                <span></span>
             </a>
         </div>
     </header>
@@ -47,7 +118,7 @@
         </div>
     </main>
 
-
+    <script src="js/header-navigation.js"></script>
     <script src="js/registrar-vacinacao.js"></script>
     <script src="js/header-user.js"></script>
 </body>
