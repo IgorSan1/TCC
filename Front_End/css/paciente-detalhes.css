@@ -296,6 +296,7 @@
     border-top: 1px solid var(--border-color);
 }
 
+
 /* Responsividade para paginação */
 @media (max-width: 768px) {
     .paginacao-container {
@@ -334,5 +335,74 @@
 
     .modal-actions .btn {
         width: 100%;
+    }
+}
+
+/* Estilo do botão de excluir */
+.btn-delete-info {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-delete-info:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3);
+}
+
+.btn-delete-info:active {
+    transform: translateY(0);
+}
+
+.btn-delete-info:disabled {
+    background-color: #e7e7e7;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Container dos botões de ação */
+.card-header-with-action > div {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .card-header-with-action {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .card-header-with-action > div {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .btn-edit-info,
+    .btn-delete-info {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-edit-info,
+    .btn-delete-info {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
     }
 }

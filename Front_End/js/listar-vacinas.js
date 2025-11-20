@@ -7,6 +7,12 @@
     let vacinaEmEdicao = null;
     let paginaAtual = 1;
     const ITENS_POR_PAGINA = 5;
+    
+    // ✅ CONFIGURAÇÃO DE ORDENAÇÃO
+    let ordenacaoAtual = {
+        campo: 'dataFabricacao', // Campo padrão: data de fabricação
+        direcao: 'desc' // 'asc' = mais antiga primeiro, 'desc' = mais recente primeiro
+    };
 
     // ===== VERIFICAR AUTENTICAÇÃO =====
     if (!token) {
@@ -34,7 +40,6 @@
     function verificarVencimento(dataValidade) {
         if (!dataValidade) return 'vencida';
         
-        // Converte a data de validade para objeto Date
         let dataValidadeObj;
         
         if (dataValidade.includes('/')) {
@@ -47,9 +52,8 @@
             return 'vencida';
         }
         
-        // Compara com a data atual
         const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Zera as horas para comparar apenas a data
+        hoje.setHours(0, 0, 0, 0);
         
         return dataValidadeObj >= hoje ? 'valida' : 'vencida';
     }
@@ -99,6 +103,62 @@
             .replace(/[\u0300-\u036f]/g, '');
     }
 
+    // ✅ NOVA FUNÇÃO: Converter data para objeto Date para ordenação
+    function converterParaDate(dataString) {
+        if (!dataString) return new Date(0); // Data mínima para datas inválidas
+        
+        if (dataString.includes('/')) {
+            const [dia, mes, ano] = dataString.split('/');
+            return new Date(ano, mes - 1, dia);
+        }
+        
+        if (dataString.includes('-')) {
+            const [ano, mes, dia] = dataString.split('-');
+            return new Date(ano, mes - 1, dia.split('T')[0]);
+        }
+        
+        return new Date(dataString);
+    }
+
+    // ✅ NOVA FUNÇÃO: Ordenar vacinas
+    function ordenarVacinas(vacinas) {
+        return [...vacinas].sort((a, b) => {
+            let valorA, valorB;
+            
+            switch(ordenacaoAtual.campo) {
+                case 'dataFabricacao':
+                    valorA = converterParaDate(a.dataFabricacao);
+                    valorB = converterParaDate(b.dataFabricacao);
+                    break;
+                case 'dataValidade':
+                    valorA = converterParaDate(a.dataValidade);
+                    valorB = converterParaDate(b.dataValidade);
+                    break;
+                case 'nome':
+                    valorA = (a.nome || '').toLowerCase();
+                    valorB = (b.nome || '').toLowerCase();
+                    return ordenacaoAtual.direcao === 'asc' 
+                        ? valorA.localeCompare(valorB)
+                        : valorB.localeCompare(valorA);
+                default:
+                    // Fallback: ordenar por data de criação ou ID
+                    if (a.createdAt && b.createdAt) {
+                        valorA = new Date(a.createdAt);
+                        valorB = new Date(b.createdAt);
+                    } else if (a.id && b.id) {
+                        return b.id - a.id;
+                    }
+            }
+            
+            // Ordenação por data
+            if (ordenacaoAtual.direcao === 'asc') {
+                return valorA - valorB; // Mais antiga primeiro
+            } else {
+                return valorB - valorA; // Mais recente primeiro
+            }
+        });
+    }
+
     // ===== CARREGAR VACINAS =====
     async function carregarVacinas() {
         const loading = document.getElementById('loading');
@@ -138,6 +198,7 @@
             vacinasFiltradas = [...vacinas];
 
             console.log(`✅ ${vacinas.length} vacinas carregadas`);
+            console.log(`📊 Ordenação configurada: ${ordenacaoAtual.campo} (${ordenacaoAtual.direcao})`);
 
             renderizarTabela(vacinas);
 
@@ -164,18 +225,12 @@
         tbody.innerHTML = '';
         msgVazio.style.display = 'none';
 
-        // Ordenar do mais recente ao mais antigo (sempre)
-        const vacinasOrdenadas = [...vacinas].sort((a, b) => {
-            // Primeiro tenta ordenar por data de criação
-            if (a.createdAt && b.createdAt) {
-                return new Date(b.createdAt) - new Date(a.createdAt);
-            }
-            // Se não tiver createdAt, ordena por ID (maior ID = mais recente)
-            if (a.id && b.id) {
-                return b.id - a.id;
-            }
-            // Fallback: ordena por nome
-            return a.nome.localeCompare(b.nome);
+        // ✅ APLICAR ORDENAÇÃO (por data de fabricação - mais recente primeiro)
+        const vacinasOrdenadas = ordenarVacinas(vacinas);
+
+        console.log("📊 Primeiras 3 vacinas após ordenação:");
+        vacinasOrdenadas.slice(0, 3).forEach((v, i) => {
+            console.log(`${i + 1}. ${v.nome} - Fabricação: ${formatarData(v.dataFabricacao)}`);
         });
 
         // Calcular paginação
@@ -247,22 +302,18 @@
     function criarPaginacao(totalItens) {
         const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA);
         
-        // Remover paginação existente
         const paginacaoExistente = document.querySelector('.paginacao-container');
         if (paginacaoExistente) {
             paginacaoExistente.remove();
         }
 
-        // Se tiver apenas 1 página ou menos, não mostrar paginação
         if (totalPaginas <= 1) {
             return;
         }
 
-        // Encontrar o card principal
         const card = document.querySelector('.card');
         if (!card) return;
 
-        // Criar container de paginação
         const paginacaoContainer = document.createElement('div');
         paginacaoContainer.className = 'paginacao-container';
         paginacaoContainer.style.cssText = `
@@ -274,7 +325,6 @@
             border-top: 1px solid var(--border-color);
         `;
 
-        // Info de paginação
         const info = document.createElement('div');
         info.className = 'paginacao-info';
         info.style.cssText = 'color: var(--text-secondary); font-size: 0.9rem;';
@@ -282,12 +332,10 @@
         const fim = Math.min(paginaAtual * ITENS_POR_PAGINA, totalItens);
         info.textContent = `Mostrando ${inicio} a ${fim} de ${totalItens} vacinas`;
 
-        // Container de botões
         const botoesContainer = document.createElement('div');
         botoesContainer.className = 'paginacao-botoes';
         botoesContainer.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
 
-        // Botão Anterior
         const btnAnterior = criarBotaoPaginacao(
             '<i class="fa-solid fa-chevron-left"></i> Anterior',
             paginaAtual === 1,
@@ -300,19 +348,15 @@
             }
         );
 
-        // Botões de números de página
         const paginasNumeros = document.createElement('div');
         paginasNumeros.style.cssText = 'display: flex; gap: 0.3rem;';
 
-        // Lógica para mostrar páginas (máximo 5 botões visíveis)
         let paginasVisiveis = [];
         if (totalPaginas <= 5) {
-            // Mostrar todas as páginas
             for (let i = 1; i <= totalPaginas; i++) {
                 paginasVisiveis.push(i);
             }
         } else {
-            // Lógica complexa para páginas dinâmicas
             if (paginaAtual <= 3) {
                 paginasVisiveis = [1, 2, 3, 4, '...', totalPaginas];
             } else if (paginaAtual >= totalPaginas - 2) {
@@ -334,7 +378,6 @@
             }
         });
 
-        // Botão Próximo
         const btnProximo = criarBotaoPaginacao(
             'Próximo <i class="fa-solid fa-chevron-right"></i>',
             paginaAtual === totalPaginas,
@@ -347,7 +390,6 @@
             }
         );
 
-        // Montar estrutura
         botoesContainer.appendChild(btnAnterior);
         botoesContainer.appendChild(paginasNumeros);
         botoesContainer.appendChild(btnProximo);
@@ -355,7 +397,6 @@
         paginacaoContainer.appendChild(info);
         paginacaoContainer.appendChild(botoesContainer);
 
-        // Adicionar ao card
         card.appendChild(paginacaoContainer);
     }
 
@@ -479,7 +520,6 @@
         const dataFabricacaoInput = document.getElementById('edit-vacina-fabricacao').value;
         const dataValidadeInput = document.getElementById('edit-vacina-validade').value;
 
-        // Validações
         if (!nome || !numeroLote || !fabricante || !dataFabricacaoInput || !dataValidadeInput) {
             alert("Por favor, preencha todos os campos obrigatórios.");
             return;
@@ -607,7 +647,6 @@
             resultadoDiv.className = 'resultado-filtro';
         }
 
-        // Resetar para primeira página ao filtrar
         paginaAtual = 1;
         renderizarTabela(vacinasFiltradas);
     }
@@ -616,7 +655,7 @@
         document.getElementById('filtro-vacina').value = '';
         document.getElementById('filtro-fabricante').value = '';
         document.getElementById('filtro-status').value = '';
-        paginaAtual = 1; // Resetar página ao limpar filtros
+        paginaAtual = 1;
         filtrarVacinas();
         document.getElementById('filtro-vacina').focus();
     }
@@ -654,7 +693,6 @@
         btnLimpar.addEventListener('click', limparFiltros);
     }
 
-    // Fechar modal ao clicar fora
     document.addEventListener('click', function(e) {
         const modal = document.getElementById('modal-editar-vacina');
         if (e.target === modal) {
@@ -662,6 +700,5 @@
         }
     });
 
-    // ===== INICIALIZAR =====
     carregarVacinas();
 })();

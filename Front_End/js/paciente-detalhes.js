@@ -314,6 +314,192 @@
         }
     });
 
+    // ===== FUNÇÃO PARA DELETA PACIENTE =====
+    window.excluirPaciente = async function () {
+        // Verificar se há dados do paciente
+        if (!pessoaAtual) {
+            alert("❌ Erro: Dados do paciente não disponíveis.");
+            return;
+        }
+
+        console.log("🗑️ Iniciando processo de exclusão do paciente:", pessoaAtual.nomeCompleto);
+
+        // ===== PRIMEIRA CONFIRMAÇÃO =====
+        const confirmacao1 = confirm(
+            `⚠️ ATENÇÃO: Exclusão de Paciente\n\n` +
+            `Tem certeza que deseja excluir o paciente "${pessoaAtual.nomeCompleto}"?\n\n` +
+            `CPF: ${formatCpf(pessoaAtual.cpf)}\n\n` +
+            `Esta ação irá remover permanentemente todos os dados do paciente.`
+        );
+
+        if (!confirmacao1) {
+            console.log("❌ Exclusão cancelada pelo usuário (1ª confirmação)");
+            return;
+        }
+
+        // ===== SEGUNDA CONFIRMAÇÃO (Segurança Extra) =====
+        const confirmacao2 = confirm(
+            `🚨 ÚLTIMA CONFIRMAÇÃO\n\n` +
+            `Esta ação NÃO PODE SER DESFEITA!\n\n` +
+            `Deseja realmente excluir o paciente "${pessoaAtual.nomeCompleto}"?\n\n` +
+            `Clique em OK para confirmar a exclusão.`
+        );
+
+        if (!confirmacao2) {
+            console.log("❌ Exclusão cancelada pelo usuário (2ª confirmação)");
+            return;
+        }
+
+        // ===== VERIFICAR PERMISSÃO =====
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("❌ Você precisa estar logado para excluir um paciente.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        // Verificar se é ADMIN
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const role = payload?.role;
+
+            if (role !== 'ADMIN') {
+                alert(
+                    "⚠️ ACESSO NEGADO\n\n" +
+                    "Apenas usuários com perfil ADMIN podem excluir pacientes.\n\n" +
+                    "Esta ação requer permissões administrativas."
+                );
+                console.log("🚫 Usuário não é ADMIN - exclusão negada");
+                return;
+            }
+
+            console.log("✅ Usuário é ADMIN - prosseguindo com exclusão");
+
+        } catch (e) {
+            console.error("❌ Erro ao verificar permissões:", e);
+            alert("Erro ao verificar permissões. Faça login novamente.");
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+            return;
+        }
+
+        // ===== EXECUTAR EXCLUSÃO =====
+        try {
+            console.log("🔄 Enviando requisição de exclusão para o backend...");
+            console.log("UUID do paciente:", pessoaAtual.uuid);
+
+            const response = await fetch(`${API_BASE}/pessoa/${pessoaAtual.uuid}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            console.log("📥 Status da resposta:", response.status);
+
+            // ✅ SUCESSO (204 No Content ou 200 OK)
+            if (response.ok || response.status === 204) {
+                console.log("✅ Paciente excluído com sucesso");
+
+                // Limpar dados do localStorage
+                localStorage.removeItem("pacienteSelecionado");
+
+                // Mostrar mensagem de sucesso
+                alert(
+                    "✅ Paciente Excluído com Sucesso\n\n" +
+                    `O paciente "${pessoaAtual.nomeCompleto}" foi removido do sistema.\n\n` +
+                    `Você será redirecionado para a página inicial.`
+                );
+
+                // Redirecionar para home após 1 segundo
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 1000);
+
+            }
+            // ❌ ERRO 403 - Sem permissão
+            else if (response.status === 403) {
+                console.error("❌ Erro 403 - Acesso negado");
+                alert(
+                    "⚠️ ACESSO NEGADO\n\n" +
+                    "Você não tem permissão para excluir pacientes.\n\n" +
+                    "Apenas administradores podem realizar esta ação."
+                );
+            }
+            // ❌ ERRO 404 - Paciente não encontrado
+            else if (response.status === 404) {
+                console.error("❌ Erro 404 - Paciente não encontrado");
+                alert(
+                    "⚠️ Paciente Não Encontrado\n\n" +
+                    "O paciente pode já ter sido excluído ou não existe mais no sistema.\n\n" +
+                    "Você será redirecionado para a página inicial."
+                );
+                setTimeout(() => {
+                    window.location.href = "home.html";
+                }, 2000);
+            }
+            // ❌ OUTROS ERROS
+            else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("❌ Erro ao excluir:", errorData);
+
+                const mensagemErro = errorData.mensagem || errorData.message || response.statusText;
+                alert(
+                    `❌ Erro ao Excluir Paciente\n\n` +
+                    `${mensagemErro}\n\n` +
+                    `Status: ${response.status}\n\n` +
+                    `Por favor, tente novamente ou entre em contato com o suporte.`
+                );
+            }
+
+        } catch (error) {
+            // ❌ ERRO DE CONEXÃO
+            console.error("❌ Erro ao conectar com o servidor:", error);
+            alert(
+                "❌ Erro de Conexão\n\n" +
+                "Não foi possível conectar com o servidor.\n\n" +
+                "Verifique sua conexão com a internet e tente novamente."
+            );
+        }
+    };
+
+    /**
+     * Verifica se o usuário é ADMIN e controla a visibilidade do botão de excluir
+     */
+    function controlarVisibilidadeBotaoExcluir() {
+        const btnExcluir = document.querySelector('.btn-delete-info');
+
+        if (!btnExcluir) {
+            console.warn("⚠️ Botão de excluir não encontrado no DOM");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            console.log("🚫 Sem token - ocultando botão de excluir");
+            btnExcluir.style.display = 'none';
+            return;
+        }
+
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const role = payload?.role;
+
+            if (role === 'ADMIN') {
+                console.log("✅ Usuário é ADMIN - exibindo botão de excluir");
+                btnExcluir.style.display = 'inline-flex';
+            } else {
+                console.log("🚫 Usuário não é ADMIN - ocultando botão de excluir");
+                btnExcluir.style.display = 'none';
+            }
+        } catch (e) {
+            console.error("❌ Erro ao verificar role do usuário:", e);
+            btnExcluir.style.display = 'none';
+        }
+    }
+
+
     // ===== FUNÇÃO PARA EXCLUIR VACINAÇÃO =====
     window.excluirVacinacao = async function(uuid, nomeVacina) {
         const confirmacao = confirm(
@@ -787,9 +973,6 @@
     if (btnLimpar) {
         btnLimpar.addEventListener('click', limparFiltro);
     }
-
-    // ===== NOTA: CPF e CNS são campos readonly no modal, então não precisam de máscaras =====
-    // Os valores originais serão usados do objeto pessoaAtual
 
     // Iniciar a busca
     buscarEExibirPaciente();

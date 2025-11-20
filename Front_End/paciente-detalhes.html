@@ -106,9 +106,14 @@
             <div class="card info-card">
                 <div class="card-header-with-action">
                     <h3 class="card-title"><i class="fa-solid fa-user-tag"></i> Informações Pessoais</h3>
-                    <button class="btn-edit-info" onclick="abrirModalEdicaoPaciente()">
-                        <i class="fa-solid fa-edit"></i> Editar Informações
-                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn-edit-info" onclick="abrirModalEdicaoPaciente()">
+                            <i class="fa-solid fa-edit"></i> Editar Informações
+                        </button>
+                        <button class="btn-delete-info" onclick="excluirPaciente()">
+                            <i class="fa-solid fa-trash"></i> Excluir Paciente
+                        </button>
+                    </div>
                 </div>
                 <div class="info-grid">
                     <div class="info-item"><strong>Nome Completo:</strong> <span id="nome-completo"></span></div>
@@ -175,7 +180,7 @@
         </div>
     </main>
 
-    <!-- Modal de Edição -->
+    <!-- Modal de Edição de Vacinação -->
     <div id="modal-editar-vacinacao" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -287,6 +292,7 @@
             </div>
         </div>
     </div>
+    
     <script src="js/header-navigation.js"></script>
     <script src="js/header-user.js"></script>
     <script src="js/paciente-detalhes.js"></script>
