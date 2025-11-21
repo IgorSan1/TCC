@@ -90,7 +90,7 @@
         }
     }
 
-    // ===== CONTROLE DE VISIBILIDADE DO BOTÃO DE EXCLUIR =====
+    // ===== ✅ CONTROLE DE VISIBILIDADE DO BOTÃO DE EXCLUIR =====
     function controlarVisibilidadeBotaoExcluir() {
         console.log("🔐 Verificando permissões para o botão de excluir...");
         
@@ -356,7 +356,7 @@
         }
     });
 
-    // ===== FUNÇÃO PARA DELETAR PACIENTE =====
+    // ===== ✅ FUNÇÃO COMPLETA PARA DELETAR PACIENTE (ADMIN ONLY) =====
     window.excluirPaciente = async function () {
         if (!pessoaAtual) {
             alert("❌ Erro: Dados do paciente não disponíveis.");
@@ -365,6 +365,7 @@
 
         console.log("🗑️ Iniciando processo de exclusão do paciente:", pessoaAtual.nomeCompleto);
 
+        // ✅ Primeira confirmação
         const confirmacao1 = confirm(
             `⚠️ ATENÇÃO: Exclusão de Paciente\n\n` +
             `Tem certeza que deseja excluir o paciente "${pessoaAtual.nomeCompleto}"?\n\n` +
@@ -377,6 +378,7 @@
             return;
         }
 
+        // ✅ Segunda confirmação (mais enfática)
         const confirmacao2 = confirm(
             `🚨 ÚLTIMA CONFIRMAÇÃO\n\n` +
             `Esta ação NÃO PODE SER DESFEITA!\n\n` +
@@ -389,6 +391,7 @@
             return;
         }
 
+        // ✅ Verificar se o token existe
         const token = localStorage.getItem("token");
         if (!token) {
             alert("❌ Você precisa estar logado para excluir um paciente.");
@@ -396,6 +399,7 @@
             return;
         }
 
+        // ✅ Verificar se o usuário é ADMIN
         try {
             const payload = decodeJWT(token);
             const role = payload?.role;
@@ -420,6 +424,7 @@
             return;
         }
 
+        // ✅ Executar a exclusão
         try {
             console.log("🔄 Enviando requisição de exclusão para o backend...");
             console.log("UUID do paciente:", pessoaAtual.uuid);
@@ -436,6 +441,7 @@
             if (response.ok || response.status === 204) {
                 console.log("✅ Paciente excluído com sucesso");
 
+                // Limpar dados do localStorage
                 localStorage.removeItem("pacienteSelecionado");
 
                 alert(
@@ -444,6 +450,7 @@
                     `Você será redirecionado para a página inicial.`
                 );
 
+                // Redirecionar para home após 1 segundo
                 setTimeout(() => {
                     window.location.href = "home.html";
                 }, 1000);
@@ -520,6 +527,251 @@
         }
     };
 
+    // ===== BUSCAR E EXIBIR PACIENTE =====
+    async function buscarEExibirPaciente() {
+        console.log("🔍 Buscando paciente por CPF:", cpf);
+
+        try {
+            const cpfLimpo = cpf.replace(/\D/g, '');
+            
+            const response = await fetch(`${API_BASE}/pessoa/buscar-por-cpf`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ cpf: cpfLimpo })
+            });
+
+            if (!response.ok) {
+                throw new Error("Paciente não encontrado");
+            }
+
+            const data = await response.json();
+            
+            let pessoa = null;
+            if (Array.isArray(data?.dados) && Array.isArray(data.dados[0])) {
+                pessoa = data.dados[0][0];
+            } else if (Array.isArray(data?.dados)) {
+                pessoa = data.dados[0];
+            } else if (data?.dados) {
+                pessoa = data.dados;
+            } else {
+                pessoa = data;
+            }
+
+            if (!pessoa || !pessoa.uuid) {
+                throw new Error("Dados do paciente inválidos");
+            }
+
+            pessoaAtual = pessoa;
+            console.log("✅ Paciente encontrado:", pessoa);
+
+            // Preencher informações na página
+            document.getElementById('nome-completo').textContent = pessoa.nomeCompleto || 'N/A';
+            document.getElementById('cpf').textContent = formatCpf(pessoa.cpf) || 'N/A';
+            document.getElementById('data-nascimento').textContent = formatDate(pessoa.dataNascimento) || 'N/A';
+            document.getElementById('sexo').textContent = pessoa.sexo || 'N/A';
+            document.getElementById('cns').textContent = pessoa.cns || 'N/A';
+            document.getElementById('etnia').textContent = pessoa.etnia || 'N/A';
+            document.getElementById('comunidade').textContent = pessoa.comunidade || 'N/A';
+            document.getElementById('comorbidade').textContent = pessoa.comorbidade || 'Nenhuma';
+
+            // Buscar histórico de vacinações
+            await buscarHistoricoVacinal(pessoa.uuid);
+            
+            // ✅ Controlar visibilidade do botão de excluir
+            controlarVisibilidadeBotaoExcluir();
+
+        } catch (error) {
+            console.error("❌ Erro ao buscar paciente:", error);
+            alert("Erro ao carregar informações do paciente.");
+            window.location.href = "home.html";
+        }
+    }
+
+    // ===== BUSCAR HISTÓRICO VACINAL =====
+    async function buscarHistoricoVacinal(pessoaUuid) {
+        console.log("💉 Buscando histórico vacinal do paciente:", pessoaUuid);
+
+        try {
+            const response = await fetch(`${API_BASE}/vacinacoes?size=1000&page=0`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Erro ao buscar vacinações");
+            }
+
+            const data = await response.json();
+            
+            let vacinacoes = [];
+            if (Array.isArray(data?.dados) && Array.isArray(data.dados[0])) {
+                vacinacoes = data.dados[0];
+            } else if (Array.isArray(data?.dados)) {
+                vacinacoes = data.dados;
+            }
+
+            // Filtrar vacinações do paciente
+            const vacinacoesPaciente = [];
+            
+            for (const v of vacinacoes) {
+                try {
+                    const respDetalhe = await fetch(`${API_BASE}/vacinacoes/${v.uuid}`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    
+                    if (respDetalhe.ok) {
+                        const detalhe = await respDetalhe.json();
+                        
+                        let detalheDados = null;
+                        if (Array.isArray(detalhe?.dados) && Array.isArray(detalhe.dados[0])) {
+                            detalheDados = detalhe.dados[0][0];
+                        } else if (Array.isArray(detalhe?.dados)) {
+                            detalheDados = detalhe.dados[0];
+                        } else if (detalhe?.dados) {
+                            detalheDados = detalhe.dados;
+                        } else {
+                            detalheDados = detalhe;
+                        }
+                        
+                        if (detalheDados && detalheDados.pessoa && detalheDados.pessoa.uuid === pessoaUuid) {
+                            vacinacoesPaciente.push({
+                                ...v,
+                                pessoa: detalheDados.pessoa,
+                                vacina: detalheDados.vacina
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.warn("⚠️ Erro ao buscar detalhe da vacinação:", err);
+                }
+            }
+
+            todasVacinacoes = vacinacoesPaciente;
+            vacinacoesFiltradasAtual = [...vacinacoesPaciente];
+            
+            console.log(`✅ ${vacinacoesPaciente.length} vacinações encontradas para o paciente`);
+
+            renderizarHistoricoVacinal(vacinacoesPaciente);
+
+        } catch (error) {
+            console.error("❌ Erro ao buscar histórico vacinal:", error);
+        }
+    }
+
+    // ===== RENDERIZAR HISTÓRICO VACINAL =====
+    function renderizarHistoricoVacinal(vacinacoes) {
+        const tbody = document.getElementById('historico-vacinacao-body');
+        const msgVazio = document.getElementById('historico-vacinacao-vazio');
+
+        if (vacinacoes.length === 0) {
+            tbody.innerHTML = '';
+            msgVazio.style.display = 'block';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        msgVazio.style.display = 'none';
+
+        // Ordenar por data de aplicação (mais recente primeiro)
+        const vacinacoesOrdenadas = [...vacinacoes].sort((a, b) => {
+            const dataA = converterParaDate(a.dataAplicacao);
+            const dataB = converterParaDate(b.dataAplicacao);
+            return dataB - dataA;
+        });
+
+        // Paginação
+        const totalPaginas = Math.ceil(vacinacoesOrdenadas.length / ITENS_POR_PAGINA);
+        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+        const fim = inicio + ITENS_POR_PAGINA;
+        const vacinacoesPaginadas = vacinacoesOrdenadas.slice(inicio, fim);
+
+        vacinacoesPaginadas.forEach(v => {
+            const row = tbody.insertRow();
+
+            // Vacina
+            row.insertCell().textContent = v.vacina?.nome || 'N/A';
+
+            // Data Aplicação
+            row.insertCell().textContent = formatDate(v.dataAplicacao);
+
+            // Próxima Dose
+            row.insertCell().textContent = v.dataProximaDose ? formatDate(v.dataProximaDose) : 'Não há próxima dose agendada';
+
+            // Lote
+            row.insertCell().textContent = v.vacina?.numeroLote || 'N/A';
+
+            // Fabricante
+            row.insertCell().textContent = formatarFabricante(v.vacina?.fabricante) || 'N/A';
+
+            // Ações
+            const cellAcoes = row.insertCell();
+            cellAcoes.className = 'action-buttons-cell';
+            
+            const actionDiv = document.createElement('div');
+            actionDiv.style.cssText = 'display: flex; gap: 8px; justify-content: center; align-items: center;';
+            
+            // Botão Editar
+            const btnEditar = document.createElement('button');
+            btnEditar.className = 'btn-action btn-edit';
+            btnEditar.innerHTML = '<i class="fa-solid fa-edit"></i>';
+            btnEditar.title = 'Editar vacinação';
+            btnEditar.onclick = () => abrirModalEdicao(v);
+            
+            // Botão Excluir
+            const btnExcluir = document.createElement('button');
+            btnExcluir.className = 'btn-action btn-delete';
+            btnExcluir.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            btnExcluir.title = 'Excluir vacinação';
+            btnExcluir.onclick = () => excluirVacinacao(v.uuid, v.vacina?.nome);
+            
+            actionDiv.appendChild(btnEditar);
+            actionDiv.appendChild(btnExcluir);
+            cellAcoes.appendChild(actionDiv);
+        });
+
+        criarPaginacao(vacinacoesOrdenadas.length);
+    }
+
+    // ===== FUNÇÃO AUXILIAR PARA FORMATAR FABRICANTE =====
+    function formatarFabricante(fabricante) {
+        if (!fabricante) return "-";
+        
+        const fabricantes = {
+            'PFIZER_BIONTECH': 'Pfizer Biontech',
+            'ASTRAZENECA_FIOCRUZ': 'AstraZeneca Fiocruz',
+            'SINOVAC_BUTANTAN': 'Sinovac Butantan',
+            'JANSSEN': 'Janssen',
+            'MODERNA': 'Moderna',
+            'SERUM_INSTITUTE': 'Serum Institute of India',
+            'SANOFI_PASTEUR': 'Sanofi Pasteur',
+            'GLAXOSMITHKLINE': 'GlaxoSmithKline',
+            'MERCK_SHARP_DOHME': 'Merck Sharp & Dohme'
+        };
+        
+        return fabricantes[fabricante] || fabricante;
+    }
+
+    // ===== FUNÇÃO AUXILIAR PARA CONVERTER DATA =====
+    function converterParaDate(dataString) {
+        if (!dataString) return new Date(0);
+        
+        if (dataString.includes('/')) {
+            const [dia, mes, ano] = dataString.split('/');
+            return new Date(ano, mes - 1, dia);
+        }
+        
+        if (dataString.includes('-')) {
+            const [ano, mes, dia] = dataString.split('-');
+            return new Date(ano, mes - 1, dia.split('T')[0]);
+        }
+        
+        return new Date(dataString);
+    }
+
     // ===== PAGINAÇÃO =====
     function criarPaginacao(totalItens) {
         const totalPaginas = Math.ceil(totalItens / ITENS_POR_PAGINA);
@@ -556,115 +808,179 @@
         botoesContainer.className = 'paginacao-botoes';
         botoesContainer.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
 
-        const btnAnterior = document.createElement('button');
-        btnAnterior.className = 'btn-paginacao';
-        btnAnterior.innerHTML = '<i class="fa-solid fa-chevron-left"></i> Anterior';
-        btnAnterior.disabled = paginaAtual === 1;
-        btnAnterior.style.cssText = `
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: ${paginaAtual === 1 ? 'var(--background-color)' : 'var(--card-background)'};
-            color: ${paginaAtual === 1 ? 'var(--text-secondary)' : 'var(--text-primary)'};
-            cursor: ${paginaAtual === 1 ? 'not-allowed' : 'pointer'};
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        `;
-        if (paginaAtual > 1) {
-            btnAnterior.onmouseover = () => {
-                btnAnterior.style.backgroundColor = 'var(--background-color)';
-                btnAnterior.style.borderColor = 'var(--primary-blue)';
-            };
-            btnAnterior.onmouseout = () => {
-                btnAnterior.style.backgroundColor = 'var(--card-background)';
-                btnAnterior.style.borderColor = 'var(--border-color)';
-            };
-        }
-        btnAnterior.addEventListener('click', () => {
-            if (paginaAtual > 1) {
-                paginaAtual--;
-                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+        const btnAnterior = criarBotaoPaginacao(
+            '<i class="fa-solid fa-chevron-left"></i> Anterior',
+            paginaAtual === 1,
+            () => {
+                if (paginaAtual > 1) {
+                    paginaAtual--;
+                    renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+                }
             }
-        });
+        );
 
         const paginasNumeros = document.createElement('div');
         paginasNumeros.style.cssText = 'display: flex; gap: 0.3rem;';
 
         for (let i = 1; i <= totalPaginas; i++) {
-            const btnPagina = document.createElement('button');
-            btnPagina.textContent = i;
-            btnPagina.className = 'btn-pagina-numero';
-            const isAtiva = i === paginaAtual;
-            btnPagina.style.cssText = `
-                padding: 0.5rem 0.75rem;
-                border: 1px solid ${isAtiva ? 'var(--primary-blue)' : 'var(--border-color)'};
-                border-radius: 8px;
-                background-color: ${isAtiva ? 'var(--primary-blue)' : 'var(--card-background)'};
-                color: ${isAtiva ? 'white' : 'var(--text-primary)'};
-                cursor: pointer;
-                font-size: 0.9rem;
-                font-weight: ${isAtiva ? '600' : '500'};
-                min-width: 40px;
-                transition: all 0.2s ease;
-            `;
-            if (!isAtiva) {
-                btnPagina.onmouseover = () => {
-                    btnPagina.style.backgroundColor = 'var(--background-color)';
-                    btnPagina.style.borderColor = 'var(--primary-blue)';
-                };
-                btnPagina.onmouseout = () => {
-                    btnPagina.style.backgroundColor = 'var(--card-background)';
-                    btnPagina.style.borderColor = 'var(--border-color)';
-                };
-            }
-            btnPagina.addEventListener('click', () => {
-                paginaAtual = i;
-                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
-            });
+            const btnPagina = criarBotaoNumeroPagina(i, i === paginaAtual);
             paginasNumeros.appendChild(btnPagina);
         }
 
-        const btnProximo = document.createElement('button');
-        btnProximo.className = 'btn-paginacao';
-        btnProximo.innerHTML = 'Próximo <i class="fa-solid fa-chevron-right"></i>';
-        btnProximo.disabled = paginaAtual === totalPaginas;
-        btnProximo.style.cssText = `
+        const btnProximo = criarBotaoPaginacao(
+            'Próximo <i class="fa-solid fa-chevron-right"></i>',
+            paginaAtual === totalPaginas,
+            () => {
+                if (paginaAtual < totalPaginas) {
+                    paginaAtual++;
+                    renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+                }
+            }
+        );
+
+        botoesContainer.appendChild(btnAnterior);
+        botoesContainer.appendChild(paginasNumeros);
+        botoesContainer.appendChild(btnProximo);
+
+        paginacaoContainer.appendChild(info);
+        paginacaoContainer.appendChild(botoesContainer);
+
+        historicoCard.appendChild(paginacaoContainer);
+    }
+
+    function criarBotaoPaginacao(html, disabled, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-paginacao';
+        btn.innerHTML = html;
+        btn.disabled = disabled;
+        btn.style.cssText = `
             padding: 0.5rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            background-color: ${paginaAtual === totalPaginas ? 'var(--background-color)' : 'var(--card-background)'};
-            color: ${paginaAtual === totalPaginas ? 'var(--text-secondary)' : 'var(--text-primary)'};
-            cursor: ${paginaAtual === totalPaginas ? 'not-allowed' : 'pointer'};
+            background-color: ${disabled ? 'var(--background-color)' : 'var(--card-background)'};
+            color: ${disabled ? 'var(--text-secondary)' : 'var(--text-primary)'};
+            cursor: ${disabled ? 'not-allowed' : 'pointer'};
             font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            opacity: ${disabled ? '0.6' : '1'};
         `;
-        if (paginaAtual < totalPaginas) {
-            btnProximo.onmouseover = () => {
-                btnProximo.style.backgroundColor = 'var(--background-color)';
-                btnProximo.style.borderColor = 'var(--primary-blue)';
+        
+        if (!disabled) {
+            btn.onmouseover = () => {
+                btn.style.backgroundColor = 'var(--background-color)';
+                btn.style.borderColor = 'var(--primary-blue)';
             };
-            btnProximo.onmouseout = () => {
-                btnProximo.style.backgroundColor = 'var(--card-background)';
-                btnProximo.style.borderColor = 'var(--border-color)';
+            btn.onmouseout = () => {
+                btn.style.backgroundColor = 'var(--card-background)';
+                btn.style.borderColor = 'var(--border-color)';
+            };
+            btn.onclick = onClick;
+        }
+        
+        return btn;
+    }
+
+    function criarBotaoNumeroPagina(numero, isAtiva) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-pagina-numero';
+        btn.textContent = numero;
+        btn.style.cssText = `
+            padding: 0.5rem 0.75rem;
+            border: 1px solid ${isAtiva ? 'var(--primary-blue)' : 'var(--border-color)'};
+            border-radius: 8px;
+            background-color: ${isAtiva ? 'var(--primary-blue)' : 'var(--card-background)'};
+            color: ${isAtiva ? 'white' : 'var(--text-primary)'};
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: ${isAtiva ? '600' : '500'};
+            min-width: 40px;
+            transition: all 0.2s ease;
+        `;
+        
+        if (!isAtiva) {
+            btn.onmouseover = () => {
+                btn.style.backgroundColor = 'var(--background-color)';
+                btn.style.borderColor = 'var(--primary-blue)';
+            };
+            btn.onmouseout = () => {
+                btn.style.backgroundColor = 'var(--card-background)';
+                btn.style.borderColor = 'var(--border-color)';
+            };
+            btn.onclick = () => {
+                paginaAtual = numero;
+                renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
             };
         }
-        btnProximo.addEventListener('click', () => {
-            if (paginaAtual < totalPaginas) {
-                paginaAtual++;
+        
+        return btn;
+    }
+
+    // ===== FILTRO DE VACINAÇÕES =====
+    const filtroInput = document.getElementById('filtro-vacina');
+    const btnLimparFiltro = document.getElementById('limpar-filtro');
+    const resultadoFiltro = document.getElementById('resultado-filtro');
+
+    if (filtroInput) {
+        let debounceTimer;
+        filtroInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const filtroTexto = normalizeText(filtroInput.value.trim());
+                
+                if (filtroTexto.length > 0) {
+                    btnLimparFiltro.style.display = 'flex';
+                    
+                    vacinacoesFiltradasAtual = todasVacinacoes.filter(v => {
+                        const nomeVacina = normalizeText(v.vacina?.nome || '');
+                        return nomeVacina.includes(filtroTexto);
+                    });
+                    
+                    if (vacinacoesFiltradasAtual.length > 0) {
+                        resultadoFiltro.textContent = `${vacinacoesFiltradasAtual.length} vacinação(ões) encontrada(s)`;
+                        resultadoFiltro.className = 'resultado-filtro tem-resultados';
+                    } else {
+                        resultadoFiltro.textContent = 'Nenhuma vacinação encontrada com este filtro';
+                        resultadoFiltro.className = 'resultado-filtro sem-resultados';
+                    }
+                } else {
+                    btnLimparFiltro.style.display = 'none';
+                    vacinacoesFiltradasAtual = [...todasVacinacoes];
+                    resultadoFiltro.textContent = '';
+                    resultadoFiltro.className = 'resultado-filtro';
+                }
+                
+                paginaAtual = 1;
                 renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
-            }
+            }, 300);
         });
+    }
 
-        botoesContainer.appendChild(btnAnterior);
-        botoesContainer.appendChild(paginasNumeros);
-        botoesContainer.appendChild(btnProximo);
+    if (btnLimparFiltro) {
+        btnLimparFiltro.addEventListener('click', () => {
+            filtroInput.value = '';
+            btnLimparFiltro.style.display = 'none';
+            vacinacoesFiltradasAtual = [...todasVacinacoes];
+            resultadoFiltro.textContent = '';
+            resultadoFiltro.className = 'resultado-filtro';
+            paginaAtual = 1;
+            renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
+            filtroInput.focus();
+        });
+    }
 
-        p
+    // ===== BOTÃO DE REGISTRAR NOVA VACINAÇÃO =====
+    const btnRegistrarVacinacao = document.getElementById('btn-registrar-vacinacao');
+    if (btnRegistrarVacinacao) {
+        btnRegistrarVacinacao.addEventListener('click', () => {
+            localStorage.setItem('pacienteSelecionado', JSON.stringify(pessoaAtual));
+            window.location.href = `registrar-vacinacao.html?cpf=${pessoaAtual.cpf}`;
+        });
+    }
+
+    // ===== INICIALIZAR =====
+    buscarEExibirPaciente();
+})();
