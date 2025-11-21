@@ -9,7 +9,7 @@
     let vacinacoesFiltradasAtual = [];
     let paginaAtual = 1;
     const ITENS_POR_PAGINA = 5;
-    let pessoaAtual = null; // Para armazenar dados do paciente
+    let pessoaAtual = null;
 
     if (!token) {
         alert("Você precisa estar logado para acessar esta página.");
@@ -75,6 +75,59 @@
             .replace(/[\u0300-\u036f]/g, '');
     }
 
+    // ===== FUNÇÃO PARA DECODIFICAR JWT =====
+    function decodeJWT(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error("Erro ao decodificar token:", e);
+            return null;
+        }
+    }
+
+    // ===== CONTROLE DE VISIBILIDADE DO BOTÃO DE EXCLUIR =====
+    function controlarVisibilidadeBotaoExcluir() {
+        console.log("🔐 Verificando permissões para o botão de excluir...");
+        
+        const btnExcluir = document.querySelector('.btn-delete-info');
+
+        if (!btnExcluir) {
+            console.warn("⚠️ Botão de excluir não encontrado no DOM");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            console.log("🚫 Sem token - ocultando botão de excluir");
+            btnExcluir.style.display = 'none';
+            return;
+        }
+
+        try {
+            const payload = decodeJWT(token);
+            const role = payload?.role;
+
+            console.log("👤 Role do usuário:", role);
+
+            if (role === 'ADMIN') {
+                console.log("✅ Usuário é ADMIN - exibindo botão de excluir");
+                btnExcluir.style.display = 'inline-flex';
+            } else {
+                console.log("🚫 Usuário não é ADMIN - ocultando botão de excluir");
+                btnExcluir.style.display = 'none';
+            }
+        } catch (e) {
+            console.error("❌ Erro ao verificar role do usuário:", e);
+            btnExcluir.style.display = 'none';
+        }
+    }
+
     // ===== MODAL DE EDIÇÃO =====
     window.abrirModalEdicao = function(vacinacao) {
         console.log("📝 Abrindo modal de edição:", vacinacao);
@@ -105,7 +158,6 @@
 
         console.log("📝 Abrindo modal de edição do paciente:", pessoaAtual);
         
-        // Verificar se os elementos existem antes de tentar acessá-los
         const elemUuid = document.getElementById('edit-paciente-uuid');
         const elemNome = document.getElementById('edit-paciente-nome-completo');
         const elemCpf = document.getElementById('edit-paciente-cpf');
@@ -123,15 +175,12 @@
             return;
         }
 
-        // Preencher os campos
         elemUuid.value = pessoaAtual.uuid;
         elemNome.value = pessoaAtual.nomeCompleto || '';
         
-        // Aplicar máscara no CPF
         const cpfFormatado = formatCpf(pessoaAtual.cpf);
         elemCpf.value = cpfFormatado || '';
         
-        // Formatar data para input
         const dataNasc = formatDateToInput(pessoaAtual.dataNascimento);
         elemDataNasc.value = dataNasc;
         
@@ -180,7 +229,6 @@
         const dataAplicacao = formatDateToDDMMYYYY(dataAplicacaoInput);
         const dataProximaDose = dataProximaDoseInput ? formatDateToDDMMYYYY(dataProximaDoseInput) : null;
 
-        // Buscar a vacinação completa para pegar os UUIDs
         const vacinacaoOriginal = todasVacinacoes.find(v => v.uuid === vacinacaoUuid);
         
         if (!vacinacaoOriginal) {
@@ -210,7 +258,6 @@
             if (response.ok) {
                 alert("Vacinação atualizada com sucesso!");
                 fecharModalEdicao();
-                // Recarregar os dados
                 await buscarEExibirPaciente();
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -236,7 +283,6 @@
         const comunidadeElem = document.getElementById('edit-paciente-comunidade');
         const comorbidadeElem = document.getElementById('edit-paciente-comorbidade');
 
-        // Verificar se todos os elementos existem
         if (!pacienteUuidElem || !nomeCompletoElem || !cpfInputElem || !dataNascimentoInputElem || 
             !sexoElem || !cnsElem || !etniaElem || !comunidadeElem || !comorbidadeElem) {
             console.error("❌ Erro: Um ou mais elementos do formulário não foram encontrados");
@@ -247,9 +293,8 @@
         const pacienteUuid = pacienteUuidElem.value;
         const nomeCompleto = nomeCompletoElem.value.trim();
         
-        // CPF e CNS são readonly, então usamos os valores originais do pessoaAtual
-        const cpf = pessoaAtual.cpf; // Usar valor original
-        const cns = pessoaAtual.cns; // Usar valor original
+        const cpf = pessoaAtual.cpf;
+        const cns = pessoaAtual.cns;
         
         const dataNascimentoInput = dataNascimentoInputElem.value;
         const sexo = sexoElem.value;
@@ -257,7 +302,6 @@
         const comunidade = comunidadeElem.value.trim();
         const comorbidade = comorbidadeElem.value.trim();
 
-        // Validações
         if (!nomeCompleto || !cpf || !dataNascimentoInput || !sexo || !cns || !etnia || !comunidade) {
             alert("Por favor, preencha todos os campos obrigatórios.");
             return;
@@ -273,7 +317,6 @@
             return;
         }
 
-        // Converter data para dd/MM/yyyy
         const dataNascimento = formatDateToDDMMYYYY(dataNascimentoInput);
 
         const payload = {
@@ -302,7 +345,6 @@
             if (response.ok) {
                 alert("Informações do paciente atualizadas com sucesso!");
                 fecharModalEdicaoPaciente();
-                // Recarregar os dados
                 await buscarEExibirPaciente();
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -314,9 +356,8 @@
         }
     });
 
-    // ===== FUNÇÃO PARA DELETA PACIENTE =====
+    // ===== FUNÇÃO PARA DELETAR PACIENTE =====
     window.excluirPaciente = async function () {
-        // Verificar se há dados do paciente
         if (!pessoaAtual) {
             alert("❌ Erro: Dados do paciente não disponíveis.");
             return;
@@ -324,7 +365,6 @@
 
         console.log("🗑️ Iniciando processo de exclusão do paciente:", pessoaAtual.nomeCompleto);
 
-        // ===== PRIMEIRA CONFIRMAÇÃO =====
         const confirmacao1 = confirm(
             `⚠️ ATENÇÃO: Exclusão de Paciente\n\n` +
             `Tem certeza que deseja excluir o paciente "${pessoaAtual.nomeCompleto}"?\n\n` +
@@ -337,7 +377,6 @@
             return;
         }
 
-        // ===== SEGUNDA CONFIRMAÇÃO (Segurança Extra) =====
         const confirmacao2 = confirm(
             `🚨 ÚLTIMA CONFIRMAÇÃO\n\n` +
             `Esta ação NÃO PODE SER DESFEITA!\n\n` +
@@ -350,7 +389,6 @@
             return;
         }
 
-        // ===== VERIFICAR PERMISSÃO =====
         const token = localStorage.getItem("token");
         if (!token) {
             alert("❌ Você precisa estar logado para excluir um paciente.");
@@ -358,9 +396,8 @@
             return;
         }
 
-        // Verificar se é ADMIN
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = decodeJWT(token);
             const role = payload?.role;
 
             if (role !== 'ADMIN') {
@@ -383,7 +420,6 @@
             return;
         }
 
-        // ===== EXECUTAR EXCLUSÃO =====
         try {
             console.log("🔄 Enviando requisição de exclusão para o backend...");
             console.log("UUID do paciente:", pessoaAtual.uuid);
@@ -397,37 +433,29 @@
 
             console.log("📥 Status da resposta:", response.status);
 
-            // ✅ SUCESSO (204 No Content ou 200 OK)
             if (response.ok || response.status === 204) {
                 console.log("✅ Paciente excluído com sucesso");
 
-                // Limpar dados do localStorage
                 localStorage.removeItem("pacienteSelecionado");
 
-                // Mostrar mensagem de sucesso
                 alert(
                     "✅ Paciente Excluído com Sucesso\n\n" +
                     `O paciente "${pessoaAtual.nomeCompleto}" foi removido do sistema.\n\n` +
                     `Você será redirecionado para a página inicial.`
                 );
 
-                // Redirecionar para home após 1 segundo
                 setTimeout(() => {
                     window.location.href = "home.html";
                 }, 1000);
 
-            }
-            // ❌ ERRO 403 - Sem permissão
-            else if (response.status === 403) {
+            } else if (response.status === 403) {
                 console.error("❌ Erro 403 - Acesso negado");
                 alert(
                     "⚠️ ACESSO NEGADO\n\n" +
                     "Você não tem permissão para excluir pacientes.\n\n" +
                     "Apenas administradores podem realizar esta ação."
                 );
-            }
-            // ❌ ERRO 404 - Paciente não encontrado
-            else if (response.status === 404) {
+            } else if (response.status === 404) {
                 console.error("❌ Erro 404 - Paciente não encontrado");
                 alert(
                     "⚠️ Paciente Não Encontrado\n\n" +
@@ -437,9 +465,7 @@
                 setTimeout(() => {
                     window.location.href = "home.html";
                 }, 2000);
-            }
-            // ❌ OUTROS ERROS
-            else {
+            } else {
                 const errorData = await response.json().catch(() => ({}));
                 console.error("❌ Erro ao excluir:", errorData);
 
@@ -453,7 +479,6 @@
             }
 
         } catch (error) {
-            // ❌ ERRO DE CONEXÃO
             console.error("❌ Erro ao conectar com o servidor:", error);
             alert(
                 "❌ Erro de Conexão\n\n" +
@@ -462,43 +487,6 @@
             );
         }
     };
-
-    /**
-     * Verifica se o usuário é ADMIN e controla a visibilidade do botão de excluir
-     */
-    function controlarVisibilidadeBotaoExcluir() {
-        const btnExcluir = document.querySelector('.btn-delete-info');
-
-        if (!btnExcluir) {
-            console.warn("⚠️ Botão de excluir não encontrado no DOM");
-            return;
-        }
-
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            console.log("🚫 Sem token - ocultando botão de excluir");
-            btnExcluir.style.display = 'none';
-            return;
-        }
-
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const role = payload?.role;
-
-            if (role === 'ADMIN') {
-                console.log("✅ Usuário é ADMIN - exibindo botão de excluir");
-                btnExcluir.style.display = 'inline-flex';
-            } else {
-                console.log("🚫 Usuário não é ADMIN - ocultando botão de excluir");
-                btnExcluir.style.display = 'none';
-            }
-        } catch (e) {
-            console.error("❌ Erro ao verificar role do usuário:", e);
-            btnExcluir.style.display = 'none';
-        }
-    }
-
 
     // ===== FUNÇÃO PARA EXCLUIR VACINAÇÃO =====
     window.excluirVacinacao = async function(uuid, nomeVacina) {
@@ -521,7 +509,6 @@
 
             if (response.ok || response.status === 204) {
                 alert("Vacinação excluída com sucesso!");
-                // Recarregar os dados
                 await buscarEExibirPaciente();
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -680,300 +667,4 @@
         botoesContainer.appendChild(paginasNumeros);
         botoesContainer.appendChild(btnProximo);
 
-        paginacaoContainer.appendChild(info);
-        paginacaoContainer.appendChild(botoesContainer);
-
-        historicoCard.appendChild(paginacaoContainer);
-    }
-
-    // ===== FILTRO =====
-    function filtrarVacinacoes() {
-        const filtroInput = document.getElementById('filtro-vacina');
-        const filtroTexto = normalizeText(filtroInput.value.trim());
-        const resultadoDiv = document.getElementById('resultado-filtro');
-        const btnLimpar = document.getElementById('limpar-filtro');
-
-        if (filtroTexto.length > 0) {
-            btnLimpar.style.display = 'flex';
-        } else {
-            btnLimpar.style.display = 'none';
-        }
-
-        if (filtroTexto.length === 0) {
-            vacinacoesFiltradasAtual = [...todasVacinacoes];
-            resultadoDiv.textContent = '';
-            resultadoDiv.className = 'resultado-filtro';
-            paginaAtual = 1;
-            renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
-            return;
-        }
-
-        vacinacoesFiltradasAtual = todasVacinacoes.filter(vac => {
-            const nomeVacina = normalizeText(vac.vacina?.nome || '');
-            return nomeVacina.includes(filtroTexto);
-        });
-
-        if (vacinacoesFiltradasAtual.length > 0) {
-            resultadoDiv.textContent = `${vacinacoesFiltradasAtual.length} vacinação(ões) encontrada(s)`;
-            resultadoDiv.className = 'resultado-filtro tem-resultados';
-        } else {
-            resultadoDiv.textContent = 'Nenhuma vacinação encontrada com esse nome';
-            resultadoDiv.className = 'resultado-filtro sem-resultados';
-        }
-
-        paginaAtual = 1;
-        renderizarHistoricoVacinal(vacinacoesFiltradasAtual);
-    }
-
-    function limparFiltro() {
-        const filtroInput = document.getElementById('filtro-vacina');
-        filtroInput.value = '';
-        filtrarVacinacoes();
-        filtroInput.focus();
-    }
-
-    // ===== RENDERIZAR TABELA =====
-    function renderizarHistoricoVacinal(vacinacoes) {
-        const tbody = document.getElementById('historico-vacinacao-body');
-        const msgVazio = document.getElementById('historico-vacinacao-vazio');
-        
-        if (vacinacoes.length === 0) {
-            tbody.innerHTML = '';
-            msgVazio.style.display = 'block';
-            
-            const paginacaoExistente = document.querySelector('.paginacao-container');
-            if (paginacaoExistente) {
-                paginacaoExistente.remove();
-            }
-            return;
-        }
-
-        tbody.innerHTML = '';
-        msgVazio.style.display = 'none';
-
-        const vacinacoesOrdenadas = [...vacinacoes].sort((a, b) => {
-            const dataA = new Date(a.dataAplicacao.split('/').reverse().join('-'));
-            const dataB = new Date(b.dataAplicacao.split('/').reverse().join('-'));
-            return dataB - dataA;
-        });
-
-        const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-        const fim = inicio + ITENS_POR_PAGINA;
-        const vacinacoesPaginadas = vacinacoesOrdenadas.slice(inicio, fim);
-
-        vacinacoesPaginadas.forEach(vacinacao => {
-            const row = tbody.insertRow();
-            
-            row.insertCell().textContent = vacinacao.vacina?.nome || 'N/A';
-            row.insertCell().textContent = formatDate(vacinacao.dataAplicacao) || 'N/A';
-            
-            const proximaDose = vacinacao.dataProximaDose 
-                ? formatDate(vacinacao.dataProximaDose) 
-                : 'Não há próxima dose agendada';
-            row.insertCell().textContent = proximaDose;
-            
-            row.insertCell().textContent = vacinacao.vacina?.numeroLote || 'N/A';
-            
-            const fabricante = vacinacao.vacina?.fabricante || 'N/A';
-            const fabricanteFormatado = fabricante.replace(/_/g, ' ')
-                .toLowerCase()
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-            row.insertCell().textContent = fabricanteFormatado;
-
-            // ✅ NOVA CÉLULA COM BOTÕES DE AÇÃO
-            const cellAcoes = row.insertCell();
-            cellAcoes.style.textAlign = 'center';
-            
-            const actionButtonsDiv = document.createElement('div');
-            actionButtonsDiv.className = 'action-buttons-cell';
-            
-            const btnEditar = document.createElement('button');
-            btnEditar.className = 'btn-action btn-edit';
-            btnEditar.innerHTML = '<i class="fa-solid fa-edit"></i> Editar';
-            btnEditar.title = 'Editar vacinação';
-            btnEditar.onclick = () => abrirModalEdicao(vacinacao);
-            
-            const btnExcluir = document.createElement('button');
-            btnExcluir.className = 'btn-action btn-delete';
-            btnExcluir.innerHTML = '<i class="fa-solid fa-trash"></i> Excluir';
-            btnExcluir.title = 'Excluir vacinação';
-            btnExcluir.onclick = () => excluirVacinacao(vacinacao.uuid, vacinacao.vacina?.nome || 'esta vacina');
-            
-            actionButtonsDiv.appendChild(btnEditar);
-            actionButtonsDiv.appendChild(btnExcluir);
-            cellAcoes.appendChild(actionButtonsDiv);
-        });
-
-        criarPaginacao(vacinacoesOrdenadas.length);
-        console.log("✅ Histórico vacinal renderizado - Página", paginaAtual);
-    }
-
-    // ===== BUSCAR DADOS DO PACIENTE =====
-    async function buscarEExibirPaciente() {
-        try {
-            console.log("🔍 Buscando paciente com CPF:", cpf);
-            
-            const respPessoa = await fetch(`${API_BASE}/pessoa/buscar-por-cpf`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({ cpf: cpf }),
-            });
-
-            if (!respPessoa.ok) {
-                const data = await respPessoa.json().catch(() => ({}));
-                alert(data?.mensagem || "Paciente não encontrado.");
-                window.location.href = "home.html";
-                return;
-            }
-
-            const rawPessoa = await respPessoa.json();
-            
-            let pessoa = null;
-            if (rawPessoa?.dados) {
-                if (Array.isArray(rawPessoa.dados)) {
-                    pessoa = rawPessoa.dados[0];
-                } else {
-                    pessoa = rawPessoa.dados;
-                }
-            } else {
-                pessoa = rawPessoa;
-            }
-
-            if (!pessoa || !pessoa.uuid) {
-                alert("Dados do paciente incompletos.");
-                window.location.href = "home.html";
-                return;
-            }
-
-            pessoaAtual = pessoa; // Armazenar globalmente
-
-            // Exibir dados pessoais
-            document.getElementById('nome-completo').textContent = pessoa.nomeCompleto || 'N/A';
-            document.getElementById('cpf').textContent = formatCpf(pessoa.cpf) || 'N/A';
-            document.getElementById('data-nascimento').textContent = formatDate(pessoa.dataNascimento) || 'N/A';
-            document.getElementById('sexo').textContent = pessoa.sexo || 'N/A';
-            document.getElementById('cns').textContent = pessoa.cns || 'N/A';
-            document.getElementById('etnia').textContent = pessoa.etnia || 'N/A';
-            document.getElementById('comunidade').textContent = pessoa.comunidade || 'N/A';
-            document.getElementById('comorbidade').textContent = pessoa.comorbidade || 'Nenhuma';
-
-            // Buscar histórico vacinal
-            try {
-                const respVacinacoes = await fetch(`${API_BASE}/vacinacoes?size=1000&page=0`, {
-                    method: "GET",
-                    headers: { "Authorization": `Bearer ${token}` },
-                });
-
-                if (!respVacinacoes.ok) {
-                    renderizarHistoricoVacinal([]);
-                    return;
-                }
-
-                const rawVacinacoes = await respVacinacoes.json();
-                
-                let vacinacoes = [];
-                if (rawVacinacoes?.dados) {
-                    if (Array.isArray(rawVacinacoes.dados[0])) {
-                        vacinacoes = rawVacinacoes.dados[0];
-                    } else {
-                        vacinacoes = rawVacinacoes.dados;
-                    }
-                }
-
-                const vacinacoesCompletas = [];
-                
-                for (const vac of vacinacoes) {
-                    try {
-                        const respDetalhe = await fetch(`${API_BASE}/vacinacoes/${vac.uuid}`, {
-                            method: "GET",
-                            headers: { "Authorization": `Bearer ${token}` },
-                        });
-
-                        if (respDetalhe.ok) {
-                            const detalheRaw = await respDetalhe.json();
-                            
-                            let detalhe = null;
-                            if (detalheRaw?.dados) {
-                                if (Array.isArray(detalheRaw.dados)) {
-                                    detalhe = detalheRaw.dados[0];
-                                } else {
-                                    detalhe = detalheRaw.dados;
-                                }
-                            } else {
-                                detalhe = detalheRaw;
-                            }
-
-                            if (detalhe && detalhe.pessoa && detalhe.pessoa.uuid === pessoa.uuid) {
-                                vacinacoesCompletas.push(detalhe);
-                            }
-                        }
-                    } catch (err) {
-                        console.warn("❌ Erro ao buscar detalhe:", err);
-                    }
-                }
-
-                todasVacinacoes = vacinacoesCompletas;
-                vacinacoesFiltradasAtual = [...vacinacoesCompletas];
-                renderizarHistoricoVacinal(vacinacoesCompletas);
-
-            } catch (err) {
-                console.error("❌ Erro ao buscar histórico:", err);
-                renderizarHistoricoVacinal([]);
-            }
-
-            // Configurar botão de registrar
-            const btnRegistrar = document.getElementById('btn-registrar-vacinacao');
-            if (btnRegistrar) {
-                btnRegistrar.addEventListener('click', () => {
-                    localStorage.setItem("pacienteSelecionado", JSON.stringify(pessoa));
-                    window.location.href = `registrar-vacinacao.html?cpf=${pessoa.cpf}`;
-                });
-            }
-
-        } catch (err) {
-            console.error("❌ Erro geral:", err);
-            alert("Falha ao buscar dados do paciente.");
-            window.location.href = "home.html";
-        }
-    }
-
-    // ===== CONFIGURAR EVENTOS =====
-    const btnVoltar = document.querySelector('a[href="home.html"]');
-    if (btnVoltar) {
-        btnVoltar.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem("pacienteSelecionado");
-            window.location.href = "home.html";
-        });
-    }
-
-    const filtroInput = document.getElementById('filtro-vacina');
-    const btnLimpar = document.getElementById('limpar-filtro');
-
-    if (filtroInput) {
-        let debounceTimer;
-        filtroInput.addEventListener('input', () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(filtrarVacinacoes, 300);
-        });
-
-        filtroInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                filtrarVacinacoes();
-            }
-        });
-    }
-
-    if (btnLimpar) {
-        btnLimpar.addEventListener('click', limparFiltro);
-    }
-
-    // Iniciar a busca
-    buscarEExibirPaciente();
-})();
+        p
