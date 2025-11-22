@@ -58,7 +58,7 @@
     // Chamar função ao carregar a página
     atualizarNomeUsuario();
 
-    // ✅ Verificar se o usuário é ADMIN e exibir botões administrativos
+    // Verificar se o usuário é ADMIN e exibir botões administrativos
     verificarPermissaoAdmin();
 
     function verificarPermissaoAdmin() {
@@ -73,7 +73,7 @@
 
         console.log("🔐 Role do usuário:", role);
 
-        // ✅ APENAS se for ADMIN, mostrar os botões administrativos
+        // APENAS se for ADMIN, mostrar os botões administrativos
         const btnCadastroUsuario = document.getElementById("btnCadastroUsuario");
         const btnListarUsuarios = document.getElementById("btnListarUsuarios");
         
@@ -154,18 +154,26 @@
         const cpf = (searchBar.value || "").replace(/\D/g, "");
         
         if (cpf.length !== 11) {
-            alert("Informe um CPF válido (11 dígitos).");
+            alert("⚠️ Informe um CPF válido com 11 dígitos.");
             return;
         }
 
         const token = localStorage.getItem("token");
         if (!token) {
-            alert("Você precisa estar logado para buscar pacientes.");
+            alert("❌ Você precisa estar logado para buscar pacientes.");
             window.location.href = "login.html";
             return;
         }
 
+        // ✅ Adicionar indicador visual de carregamento
+        searchBar.disabled = true;
+        searchBar.style.opacity = "0.6";
+        const originalPlaceholder = searchBar.placeholder;
+        searchBar.placeholder = "Buscando...";
+
         try {
+            console.log("🔍 Buscando paciente com CPF:", cpf);
+            
             const resp = await fetch(`${API_BASE}/pessoa/buscar-por-cpf`, {
                 method: "POST",
                 headers: {
@@ -175,9 +183,25 @@
                 body: JSON.stringify({ cpf: cpf }),
             });
 
+            // ✅ Tratamento melhorado de erros
             if (!resp.ok) {
-                const data = await resp.json().catch(() => ({}));
-                alert(data?.mensagem || "Paciente não encontrado.");
+                if (resp.status === 404) {
+                    // Paciente não encontrado ou inativo
+                    alert(
+                        "⚠️ Paciente não encontrado\n\n" +
+                        "Este CPF não está cadastrado no sistema ou o paciente foi removido.\n\n" +
+                        "Verifique se o CPF está correto ou cadastre um novo paciente."
+                    );
+                    console.log("❌ Paciente não encontrado ou inativo para CPF:", cpf);
+                } else if (resp.status === 401) {
+                    alert("❌ Sessão expirada. Faça login novamente.");
+                    localStorage.removeItem("token");
+                    window.location.href = "login.html";
+                } else {
+                    const data = await resp.json().catch(() => ({}));
+                    alert(`❌ Erro ao buscar paciente: ${data?.mensagem || 'Erro desconhecido'}`);
+                    console.error("Erro na busca:", data);
+                }
                 return;
             }
 
@@ -194,15 +218,41 @@
                 pessoa = raw;
             }
 
+            // ✅ Validação adicional: verificar se o paciente está ativo
             if (pessoa && pessoa.uuid) {
+                if (pessoa.ativo === false) {
+                    alert(
+                        "⚠️ Paciente Inativo\n\n" +
+                        "Este paciente foi removido do sistema e não pode mais ser acessado.\n\n" +
+                        "Entre em contato com um administrador se precisar reativar o cadastro."
+                    );
+                    console.log("❌ Tentativa de acesso a paciente inativo:", pessoa.nomeCompleto);
+                    return;
+                }
+
+                console.log("✅ Paciente encontrado:", pessoa.nomeCompleto);
                 localStorage.setItem("pacienteSelecionado", JSON.stringify(pessoa));
                 window.location.href = `paciente-detalhes.html?cpf=${cpf}`;
             } else {
-                alert("Paciente não encontrado (UUID ausente).");
+                alert(
+                    "❌ Erro nos dados do paciente\n\n" +
+                    "Os dados retornados estão incompletos.\n\n" +
+                    "Tente novamente ou entre em contato com o suporte."
+                );
+                console.error("Dados do paciente inválidos:", pessoa);
             }
         } catch (err) {
-            console.error("Erro ao buscar paciente:", err);
-            alert("Falha ao buscar paciente. Tente novamente.");
+            console.error("❌ Erro ao buscar paciente:", err);
+            alert(
+                "❌ Erro de Conexão\n\n" +
+                "Não foi possível conectar ao servidor.\n\n" +
+                "Verifique sua conexão com a internet e tente novamente."
+            );
+        } finally {
+            // ✅ Restaurar estado do campo de busca
+            searchBar.disabled = false;
+            searchBar.style.opacity = "1";
+            searchBar.placeholder = originalPlaceholder;
         }
     }
 })();

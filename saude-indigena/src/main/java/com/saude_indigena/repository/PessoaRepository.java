@@ -20,6 +20,6 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     @Query(value = "select pessoa.* from saude.pessoa pessoa where pessoa.uuid = :pessoaUuid", nativeQuery = true)
     Optional<Pessoa> buscarPorUuid(UUID pessoaUuid);
 
-    @Query(value = "select pessoa.* from saude.pessoa pessoa where pessoa.cpf = :pessoaCpf", nativeQuery = true)
+    @Query(value = "select pessoa.* from saude.pessoa pessoa where pessoa.cpf = :pessoaCpf AND pessoa.ativo = true", nativeQuery = true)
     Optional<Pessoa> buscarPorCpf(String pessoaCpf);
 }
