@@ -120,7 +120,8 @@
                         type="text" 
                         id="filtro-paciente" 
                         class="search-bar" 
-                        placeholder="Buscar por nome, CPF ou CNS..."
+                        placeholder="Buscar por CPF"
+                        maxlength="14"
                     >
                     <button 
                         id="limpar-filtro" 
@@ -131,27 +132,9 @@
                     </button>
                 </div>
 
-                <div class="filter-options">
+                <!-- Filtro de Status - Apenas ADMIN -->
+                <div class="filter-options" id="filtro-status-container" style="display: none;">
                     <div class="filter-group">
-                        <label for="filtro-sexo">Sexo:</label>
-                        <select id="filtro-sexo">
-                            <option value="">Todos</option>
-                            <option value="MASCULINO">Masculino</option>
-                            <option value="FEMININO">Feminino</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="filtro-comunidade">Comunidade:</label>
-                        <input 
-                            type="text" 
-                            id="filtro-comunidade" 
-                            placeholder="Filtrar por comunidade"
-                        >
-                    </div>
-
-                    <!-- Filtro de Status - Apenas ADMIN -->
-                    <div class="filter-group" id="filtro-status-container" style="display: none;">
                         <label for="filtro-status">Status:</label>
                         <select id="filtro-status">
                             <option value="true">Ativos</option>

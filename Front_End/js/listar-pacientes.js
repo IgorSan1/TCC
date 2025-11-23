@@ -37,6 +37,7 @@
     function configurarInterface() {
         const filtroStatusContainer = document.getElementById('filtro-status-container');
         const colunaStatusHeader = document.getElementById('coluna-status-header');
+        const filtroPacienteInput = document.getElementById('filtro-paciente');
         
         if (isAdmin) {
             // Admin vê filtro de status e coluna de status
@@ -48,6 +49,11 @@
             if (filtroStatusContainer) filtroStatusContainer.style.display = 'none';
             if (colunaStatusHeader) colunaStatusHeader.style.display = 'none';
             console.log("✅ Interface USER configurada");
+        }
+
+        // Atualizar placeholder do campo de busca
+        if (filtroPacienteInput) {
+            filtroPacienteInput.placeholder = "Buscar por CPF";
         }
     }
 
@@ -74,6 +80,28 @@
         return text.toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    // ===== APLICAR MÁSCARA DE CPF NO CAMPO DE BUSCA =====
+    function aplicarMascaraCpf() {
+        const filtroPacienteInput = document.getElementById('filtro-paciente');
+        
+        if (filtroPacienteInput) {
+            filtroPacienteInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.slice(0, 11);
+                
+                if (value.length > 9) {
+                    e.target.value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                } else if (value.length > 6) {
+                    e.target.value = value.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3");
+                } else if (value.length > 3) {
+                    e.target.value = value.replace(/(\d{3})(\d{3})/, "$1.$2");
+                } else {
+                    e.target.value = value;
+                }
+            });
+        }
     }
 
     // ===== CARREGAR PACIENTES =====
@@ -287,46 +315,26 @@
         }
     });
 
-    // ===== FILTRAR PACIENTES =====
+    // ===== FILTRAR PACIENTES (APENAS POR CPF E STATUS PARA ADMIN) =====
     function filtrarPacientes() {
-        const filtroTexto = normalizeText(document.getElementById('filtro-paciente').value.trim());
-        const filtroSexo = document.getElementById('filtro-sexo').value;
-        const filtroComunidade = normalizeText(document.getElementById('filtro-comunidade').value.trim());
+        const filtroCpf = document.getElementById('filtro-paciente').value.replace(/\D/g, '').trim();
         const filtroStatus = isAdmin ? document.getElementById('filtro-status').value : '';
         
         const resultadoDiv = document.getElementById('resultado-filtro');
         const btnLimpar = document.getElementById('limpar-filtro');
 
-        if (filtroTexto.length > 0 || filtroSexo || filtroComunidade || filtroStatus) {
+        if (filtroCpf.length > 0 || filtroStatus) {
             btnLimpar.style.display = 'flex';
         } else {
             btnLimpar.style.display = 'none';
         }
 
         pacientesFiltrados = todosPacientes.filter(paciente => {
-            // Filtro de texto
-            let passaFiltroTexto = true;
-            if (filtroTexto) {
-                const nome = normalizeText(paciente.nomeCompleto || '');
-                const cpf = paciente.cpf || '';
-                const cns = paciente.cns || '';
-
-                passaFiltroTexto = nome.includes(filtroTexto) || 
-                                   cpf.includes(filtroTexto) || 
-                                   cns.includes(filtroTexto);
-            }
-
-            // Filtro de sexo
-            let passaFiltroSexo = true;
-            if (filtroSexo) {
-                passaFiltroSexo = paciente.sexo === filtroSexo;
-            }
-
-            // Filtro de comunidade
-            let passaFiltroComunidade = true;
-            if (filtroComunidade) {
-                const comunidade = normalizeText(paciente.comunidade || '');
-                passaFiltroComunidade = comunidade.includes(filtroComunidade);
+            // Filtro de CPF
+            let passaFiltroCpf = true;
+            if (filtroCpf) {
+                const cpfPaciente = paciente.cpf || '';
+                passaFiltroCpf = cpfPaciente.includes(filtroCpf);
             }
 
             // Filtro de status (apenas para admin)
@@ -335,15 +343,15 @@
                 passaFiltroStatus = paciente.ativo === (filtroStatus === 'true');
             }
 
-            return passaFiltroTexto && passaFiltroSexo && passaFiltroComunidade && passaFiltroStatus;
+            return passaFiltroCpf && passaFiltroStatus;
         });
 
-        if (filtroTexto || filtroSexo || filtroComunidade || filtroStatus) {
+        if (filtroCpf || filtroStatus) {
             if (pacientesFiltrados.length > 0) {
                 resultadoDiv.textContent = `${pacientesFiltrados.length} paciente(s) encontrado(s)`;
                 resultadoDiv.className = 'resultado-filtro tem-resultados';
             } else {
-                resultadoDiv.textContent = 'Nenhum paciente encontrado com estes filtros';
+                resultadoDiv.textContent = 'Nenhum paciente encontrado com este CPF';
                 resultadoDiv.className = 'resultado-filtro sem-resultados';
             }
         } else {
@@ -357,8 +365,6 @@
 
     function limparFiltros() {
         document.getElementById('filtro-paciente').value = '';
-        document.getElementById('filtro-sexo').value = '';
-        document.getElementById('filtro-comunidade').value = '';
         if (isAdmin) {
             document.getElementById('filtro-status').value = 'true'; // Default: ativos
         }
@@ -466,8 +472,6 @@
 
     // ===== EVENTOS =====
     const filtroInput = document.getElementById('filtro-paciente');
-    const filtroSexo = document.getElementById('filtro-sexo');
-    const filtroComunidade = document.getElementById('filtro-comunidade');
     const filtroStatus = document.getElementById('filtro-status');
     const btnLimpar = document.getElementById('limpar-filtro');
 
@@ -479,14 +483,6 @@
         });
     }
 
-    if (filtroSexo) filtroSexo.addEventListener('change', filtrarPacientes);
-    if (filtroComunidade) {
-        let debounceTimer;
-        filtroComunidade.addEventListener('input', () => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(filtrarPacientes, 300);
-        });
-    }
     if (filtroStatus) filtroStatus.addEventListener('change', filtrarPacientes);
     if (btnLimpar) btnLimpar.addEventListener('click', limparFiltros);
 
@@ -501,6 +497,7 @@
     // ===== INICIALIZAR =====
     if (verificarPermissao()) {
         configurarInterface();
+        aplicarMascaraCpf();
         carregarPacientes();
     }
 })();
