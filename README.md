@@ -31,6 +31,9 @@ YaraVac é uma solução completa de gestão de vacinação desenvolvida especia
 
 ## 🎬 Demonstração
 
+https://github.com/user-attachments/assets/ec50b3f5-8cb1-4423-be83-1c39c1500e60
+
+
 ### Funcionalidades Principais
 
 #### 1️⃣ **Dashboard Intuitivo**
