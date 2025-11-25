@@ -44,7 +44,7 @@ public class Vacina {
     @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime removedAt;
 
-    public Vacina(UUID uuid, String nome, String numeroLote, LocalDate dataFabricacao, LocalDate dataValidade, Fabricante fabricante, boolean ativo) {
+    public Vacina(UUID uuid, String nome, String numeroLote, LocalDate dataFabricacao, LocalDate dataValidade, Fabricante fabricante, Boolean ativo) {
         this.uuid = uuid;
         this.nome = nome;
         this.numeroLote = numeroLote;

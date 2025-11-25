@@ -33,22 +33,27 @@
         }
     }
 
-    // ===== CONFIGURAR INTERFACE BASEADA EM PERMISSÃO =====
+    // ===== ✅ CORRIGIDO: CONFIGURAR INTERFACE BASEADA EM PERMISSÃO =====
     function configurarInterface() {
         const filtroStatusContainer = document.getElementById('filtro-status-container');
         const colunaStatusHeader = document.getElementById('coluna-status-header');
         const filtroPacienteInput = document.getElementById('filtro-paciente');
         
         if (isAdmin) {
-            // Admin vê filtro de status e coluna de status
-            if (filtroStatusContainer) filtroStatusContainer.style.display = 'block';
-            if (colunaStatusHeader) colunaStatusHeader.style.display = 'table-cell';
-            console.log("✅ Interface ADMIN configurada");
+            // ✅ Admin vê filtro de status e coluna de status
+            if (filtroStatusContainer) {
+                filtroStatusContainer.style.display = 'block';
+                console.log("✅ Filtro de status EXIBIDO para ADMIN");
+            }
+            if (colunaStatusHeader) {
+                colunaStatusHeader.style.display = 'table-cell';
+                console.log("✅ Coluna de status EXIBIDA para ADMIN");
+            }
         } else {
             // User não vê filtro de status nem coluna
             if (filtroStatusContainer) filtroStatusContainer.style.display = 'none';
             if (colunaStatusHeader) colunaStatusHeader.style.display = 'none';
-            console.log("✅ Interface USER configurada");
+            console.log("✅ Interface USER configurada (sem status)");
         }
 
         // Atualizar placeholder do campo de busca
@@ -122,6 +127,8 @@
                 `${API_BASE}/pessoa/all?size=1000&page=0` : 
                 `${API_BASE}/pessoa?size=1000&page=0`;
 
+            console.log(`🔗 Endpoint usado: ${endpoint}`);
+
             const response = await fetch(endpoint, {
                 method: "GET",
                 headers: {
@@ -148,7 +155,7 @@
             pacientesFiltrados = [...pacientes];
 
             console.log(`✅ ${pacientes.length} pacientes carregados`);
-            console.log(`👥 Endpoint usado: ${isAdmin ? '/all (ADMIN)' : '/ (USER - apenas ativos)'}`);
+            console.log(`📊 Amostra de dados:`, pacientes.slice(0, 2));
 
             renderizarTabela(pacientes);
 
@@ -160,7 +167,7 @@
         }
     }
 
-    // ===== RENDERIZAR TABELA =====
+    // ===== ✅ CORRIGIDO: RENDERIZAR TABELA =====
     function renderizarTabela(pacientes) {
         const tbody = document.getElementById('pacientes-table-body');
         const msgVazio = document.getElementById('pacientes-vazio');
@@ -210,13 +217,15 @@
             // Comunidade
             row.insertCell().textContent = paciente.comunidade || '-';
 
-            // ✅ COLUNA STATUS - APENAS PARA ADMIN
+            // ✅ CORRIGIDO: COLUNA STATUS - APENAS PARA ADMIN E COM VALOR CORRETO
             if (isAdmin) {
                 const cellStatus = row.insertCell();
                 const badgeStatus = document.createElement('span');
                 badgeStatus.className = `badge-status ${paciente.ativo ? 'ativo' : 'inativo'}`;
                 badgeStatus.textContent = paciente.ativo ? 'Ativo' : 'Inativo';
                 cellStatus.appendChild(badgeStatus);
+                
+                console.log(`👤 ${paciente.nomeCompleto}: ativo=${paciente.ativo}`);
             }
 
             // Ações
@@ -273,14 +282,14 @@
         pacienteParaReativar = null;
     };
 
-    // ===== REATIVAR PACIENTE =====
+    // ===== ✅ CORRIGIDO: REATIVAR PACIENTE =====
     document.getElementById('btn-confirmar-reativar').addEventListener('click', async function() {
         if (!pacienteParaReativar) return;
 
         console.log("🔄 Reativando paciente:", pacienteParaReativar.uuid);
 
         try {
-            // Fazer PUT para atualizar o status
+            // ✅ CORRIGIDO: Fazer PUT para atualizar o paciente (status volta para ativo automaticamente)
             const payload = {
                 nomeCompleto: pacienteParaReativar.nomeCompleto,
                 cpf: pacienteParaReativar.cpf,
@@ -292,6 +301,8 @@
                 comunidade: pacienteParaReativar.comunidade
             };
 
+            console.log("📤 Payload de reativação:", payload);
+
             const response = await fetch(`${API_BASE}/pessoa/${pacienteParaReativar.uuid}`, {
                 method: "PUT",
                 headers: {
@@ -301,12 +312,15 @@
                 body: JSON.stringify(payload)
             });
 
+            console.log("📥 Status da resposta:", response.status);
+
             if (response.ok || response.status === 204) {
                 alert(`Paciente "${pacienteParaReativar.nomeCompleto}" reativado com sucesso!`);
                 fecharModalReativar();
                 await carregarPacientes();
             } else {
                 const errorData = await response.json().catch(() => ({}));
+                console.error("❌ Erro ao reativar:", errorData);
                 alert(`Erro ao reativar paciente: ${errorData.mensagem || response.statusText}`);
             }
         } catch (error) {
@@ -315,7 +329,7 @@
         }
     });
 
-    // ===== FILTRAR PACIENTES (APENAS POR CPF E STATUS PARA ADMIN) =====
+    // ===== ✅ CORRIGIDO: FILTRAR PACIENTES =====
     function filtrarPacientes() {
         const filtroCpf = document.getElementById('filtro-paciente').value.replace(/\D/g, '').trim();
         const filtroStatus = isAdmin ? document.getElementById('filtro-status').value : '';
@@ -337,10 +351,12 @@
                 passaFiltroCpf = cpfPaciente.includes(filtroCpf);
             }
 
-            // Filtro de status (apenas para admin)
+            // ✅ CORRIGIDO: Filtro de status (apenas para admin)
             let passaFiltroStatus = true;
             if (isAdmin && filtroStatus) {
-                passaFiltroStatus = paciente.ativo === (filtroStatus === 'true');
+                const statusBoolean = filtroStatus === 'true';
+                passaFiltroStatus = paciente.ativo === statusBoolean;
+                console.log(`🔍 Filtrando: ${paciente.nomeCompleto} - ativo=${paciente.ativo}, filtro=${statusBoolean}, passa=${passaFiltroStatus}`);
             }
 
             return passaFiltroCpf && passaFiltroStatus;
@@ -351,7 +367,7 @@
                 resultadoDiv.textContent = `${pacientesFiltrados.length} paciente(s) encontrado(s)`;
                 resultadoDiv.className = 'resultado-filtro tem-resultados';
             } else {
-                resultadoDiv.textContent = 'Nenhum paciente encontrado com este CPF';
+                resultadoDiv.textContent = 'Nenhum paciente encontrado com este filtro';
                 resultadoDiv.className = 'resultado-filtro sem-resultados';
             }
         } else {
@@ -366,7 +382,7 @@
     function limparFiltros() {
         document.getElementById('filtro-paciente').value = '';
         if (isAdmin) {
-            document.getElementById('filtro-status').value = 'true'; // Default: ativos
+            document.getElementById('filtro-status').value = '';
         }
         paginaAtual = 1;
         filtrarPacientes();

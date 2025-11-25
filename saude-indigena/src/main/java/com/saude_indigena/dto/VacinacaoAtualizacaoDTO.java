@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public record VacinacaoAtualizacaoDTO(@NotBlank UUID pessoaUuid,
                                       @NotBlank UUID vacinaUuid,
-                                      @JsonFormat(pattern = "dd/MM/yyyy") LocalDate dataAplicacao,
+                                      @NotBlank @JsonFormat(pattern = "dd/MM/yyyy") LocalDate dataAplicacao,
                                       @JsonFormat(pattern = "dd/MM/yyyy") LocalDate dataProximaDose) {
 }

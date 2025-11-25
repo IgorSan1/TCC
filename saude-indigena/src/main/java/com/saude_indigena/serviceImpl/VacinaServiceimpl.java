@@ -56,6 +56,9 @@ public class VacinaServiceimpl implements VacinaService {
                 vacina.setDataFabricacao(dados.dataFabricacao());
                 vacina.setDataValidade(dados.dataValidade());
                 vacina.setFabricante(dados.fabricante());
+                if (dados.ativo() != null){
+                    vacina.setAtivo(dados.ativo());
+                }
                 this.vacinaRepository.save(vacina);
                 log.info(Constantes.VACINA_MSG_ATUALIZADA);
                 return vacina;

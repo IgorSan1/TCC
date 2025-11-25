@@ -6,6 +6,7 @@ CREATE TABLE saude.pessoa
     cpf             VARCHAR(11)     UNIQUE          NOT NULL,
     sexo            VARCHAR(20)                     NOT NULL,
     data_nascimento TIMESTAMP WITH TIME ZONE        NOT NULL,
+    comorbidade     VARCHAR(90),
     etnia           VARCHAR(50)                     NOT NULL,
     cns             VARCHAR(15)     UNIQUE          NOT NULL,
     comunidade      VARCHAR(90)                     NOT NULL,

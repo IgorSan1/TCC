@@ -14,7 +14,6 @@ public record PessoaAtualizacaoDTO(@NotBlank
                                    Sexo sexo,
                                    @JsonFormat(pattern = "dd/MM/yyyy")
                                    LocalDate dataNascimento,
-                                   @NotBlank
                                    String comorbidade,
                                    @NotBlank
                                    String etnia,
@@ -22,5 +21,6 @@ public record PessoaAtualizacaoDTO(@NotBlank
                                    @Size(min = 15, max = 15)
                                    String cns,
                                    @NotBlank
-                                   String comunidade) {
+                                   String comunidade,
+                                   Boolean ativo) {
 }

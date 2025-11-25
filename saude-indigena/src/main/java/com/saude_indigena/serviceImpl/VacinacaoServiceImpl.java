@@ -1,6 +1,5 @@
 package com.saude_indigena.serviceImpl;
 
-import com.saude_indigena.dto.VacinaAtualizacaoDTO;
 import com.saude_indigena.dto.VacinacaoAtualizacaoDTO;
 import com.saude_indigena.dto.VacinacaoListagemDTO;
 import com.saude_indigena.dto.VacinacaoRegistroDTO;
@@ -19,8 +18,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

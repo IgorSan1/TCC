@@ -13,5 +13,7 @@ public record VacinaAtualizacaoDTO(@NotBlank
                                    LocalDate dataFabricacao,
                                    @JsonFormat(pattern = "dd/MM/yyyy")
                                    LocalDate dataValidade,
-                                   Fabricante fabricante) {
+                                   @NotBlank
+                                   Fabricante fabricante,
+                                   Boolean ativo) {
 }
