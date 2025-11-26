@@ -4,17 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.saude_indigena.model.Sexo;
 import java.time.LocalDate;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record PessoaCadastroDTO(@NotBlank
                                 String nomeCompleto,
-                                @NotBlank
                                 @Size(min = 11, max = 11)
                                 String cpf,
-                                @NotNull
                                 Sexo sexo,
-                                @NotNull
                                 @JsonFormat(pattern = "dd/MM/yyyy")
                                 LocalDate dataNascimento,
                                 String comorbidade,
