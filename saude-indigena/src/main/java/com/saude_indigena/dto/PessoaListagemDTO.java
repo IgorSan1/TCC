@@ -6,8 +6,8 @@ import com.saude_indigena.model.Sexo;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record PessoaListagemDTO(UUID uuid, String nomeCompleto, String cpf, Sexo sexo, @JsonFormat(pattern = "dd/MM/yyyy") LocalDate dataNascimento, String comorbidade, String etnia, String cns, String comunidade) {
-    public PessoaListagemDTO(Pessoa pessoa){
-        this(pessoa.getUuid(), pessoa.getNomeCompleto(), pessoa.getCpf(), pessoa.getSexo(), pessoa.getDataNascimento(), pessoa.getComorbidade(), pessoa.getEtnia(), pessoa.getCns(), pessoa.getComunidade());
+public record PessoaListagemDTO(UUID uuid, String nomeCompleto, String cpf, Sexo sexo, @JsonFormat(pattern = "dd/MM/yyyy") LocalDate dataNascimento, String comorbidade, String etnia, String cns, String comunidade, Boolean ativo) {
+    public PessoaListagemDTO(Pessoa pessoa) {
+        this(pessoa.getUuid(), pessoa.getNomeCompleto(), pessoa.getCpf(), pessoa.getSexo(), pessoa.getDataNascimento(), pessoa.getComorbidade(), pessoa.getEtnia(), pessoa.getCns(), pessoa.getComunidade(), pessoa.isAtivo());
     }
 }

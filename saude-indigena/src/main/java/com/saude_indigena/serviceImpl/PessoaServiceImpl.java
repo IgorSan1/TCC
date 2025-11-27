@@ -50,7 +50,6 @@ public class PessoaServiceImpl implements PessoaService {
     public Pessoa atualizar(UUID pessoaUuid, PessoaAtualizacaoDTO dados) {
         try {
             Pessoa pessoa = this.buscarPorUuid(pessoaUuid);
-            if (pessoa.isAtivo()) {
                 this.validarAtualizacao(dados);
                 pessoa.setNomeCompleto(dados.nomeCompleto());
                 pessoa.setCpf(dados.cpf());
@@ -68,10 +67,6 @@ public class PessoaServiceImpl implements PessoaService {
                 this.pessoaRepository.save(pessoa);
                 log.info(Constantes.PESSOA_MSG_ATUALIZADA);
                 return pessoa;
-            } else {
-                log.error(Constantes.PESSOA_MSG_FALHA_AO_ATUALIZAR + ": Pessoa {} inativa", pessoa.getNomeCompleto());
-                throw new ObjetoNaoEncontradoException(Constantes.PESSOA_MSG_FALHA_AO_ATUALIZAR);
-            }
         } catch (DataIntegrityViolationException e) {
             log.error(Constantes.PESSOA_MSG_FALHA_AO_ATUALIZAR + ": {}", e.getMessage());
             throw e;
@@ -143,11 +138,11 @@ public class PessoaServiceImpl implements PessoaService {
     }
 
     private void validarAtualizacao(PessoaAtualizacaoDTO dados) {
-        if (dados.nomeCompleto() == null || dados.cpf() == null || dados.dataNascimento() == null || dados.etnia() == null || dados.cns() == null || dados.comunidade() == null || dados.comorbidade() == null) {
+        if (dados.nomeCompleto() == null || dados.cpf() == null || dados.dataNascimento() == null || dados.etnia() == null || dados.cns() == null || dados.comunidade() == null) {
             log.error(Constantes.PESSOA_VALIDACAO_CAMPO_INVALIDO + ": {}", dados);
             throw new ValidacaoException(Constantes.PESSOA_VALIDACAO_CAMPO_INVALIDO);
         }
-        if (dados.nomeCompleto().isEmpty() || dados.nomeCompleto().isBlank() || dados.cpf().isEmpty() || dados.cpf().isBlank() || dados.etnia().isEmpty() || dados.etnia().isBlank() || dados.cns().isEmpty() || dados.cns().isBlank() || dados.comunidade().isEmpty() || dados.comunidade().isBlank() || dados.comorbidade().isBlank() || dados.comorbidade().isEmpty()) {
+        if (dados.nomeCompleto().isEmpty() || dados.nomeCompleto().isBlank() || dados.cpf().isEmpty() || dados.cpf().isBlank() || dados.etnia().isEmpty() || dados.etnia().isBlank() || dados.cns().isEmpty() || dados.cns().isBlank() || dados.comunidade().isEmpty() || dados.comunidade().isBlank()) {
             log.warn(Constantes.PESSOA_MSG_FALHA_AO_VALIDAR + ": {}", dados);
             throw new ValidacaoException(Constantes.PESSOA_VALIDACAO_CAMPO_INVALIDO);
         }

@@ -18,7 +18,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -49,7 +48,6 @@ public class VacinaServiceimpl implements VacinaService {
     public Vacina atualizar(UUID vacinaUuid, VacinaAtualizacaoDTO dados) {
         try {
             Vacina vacina = this.buscarPorUuid(vacinaUuid);
-            if (vacina.getAtivo()){
                 this.validarAtualizacao(dados);
                 vacina.setNome(dados.nome());
                 vacina.setNumeroLote(dados.numeroLote());
@@ -62,10 +60,6 @@ public class VacinaServiceimpl implements VacinaService {
                 this.vacinaRepository.save(vacina);
                 log.info(Constantes.VACINA_MSG_ATUALIZADA);
                 return vacina;
-            }else{
-                log.error(Constantes.VACINA_MSG_FALHA_AO_ATUALIZAR + ": Vacina {} inativa", vacina.getNome());
-                throw new ObjetoNaoEncontradoException(Constantes.VACINA_MSG_FALHA_AO_ATUALIZAR);
-            }
         }catch (DataIntegrityViolationException e){
             log.error(Constantes.VACINA_MSG_FALHA_AO_ATUALIZAR + ": {}", e.getMessage());
             throw e;

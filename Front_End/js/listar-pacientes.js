@@ -282,14 +282,19 @@
         pacienteParaReativar = null;
     };
 
-    // ===== ✅ CORRIGIDO: REATIVAR PACIENTE =====
-    document.getElementById('btn-confirmar-reativar').addEventListener('click', async function() {
-        if (!pacienteParaReativar) return;
+    // ===== ✅ CORRIGIDO: REATIVAR PACIENTE (robusto) =====
+    // Extrai a lógica para função reutilizável e adiciona fallback caso o elemento não exista
+    async function reativarPaciente() {
+        if (!pacienteParaReativar) {
+            console.warn('⚠️ Nenhum paciente selecionado para reativação.');
+            alert('Nenhum paciente selecionado para reativar.');
+            return;
+        }
 
-        console.log("🔄 Reativando paciente:", pacienteParaReativar.uuid);
+        console.log("🔄 Reativando paciente:", pacienteParaReativar.uuid ?? pacienteParaReativar.id);
 
         try {
-            // ✅ CORRIGIDO: Fazer PUT para atualizar o paciente (status volta para ativo automaticamente)
+            // Incluir explicitamente 'ativo: true' para garantir que o paciente seja reativado
             const payload = {
                 nomeCompleto: pacienteParaReativar.nomeCompleto,
                 cpf: pacienteParaReativar.cpf,
@@ -298,12 +303,14 @@
                 comorbidade: pacienteParaReativar.comorbidade || "Nenhuma",
                 etnia: pacienteParaReativar.etnia,
                 cns: pacienteParaReativar.cns,
-                comunidade: pacienteParaReativar.comunidade
+                comunidade: pacienteParaReativar.comunidade,
+                ativo: true
             };
 
             console.log("📤 Payload de reativação:", payload);
 
-            const response = await fetch(`${API_BASE}/pessoa/${pacienteParaReativar.uuid}`, {
+            const uuidParaUso = pacienteParaReativar.uuid ?? pacienteParaReativar.id;
+            const response = await fetch(`${API_BASE}/pessoa/${uuidParaUso}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -321,13 +328,29 @@
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 console.error("❌ Erro ao reativar:", errorData);
-                alert(`Erro ao reativar paciente: ${errorData.mensagem || response.statusText}`);
+                alert(`Erro ao reativar paciente: ${errorData.mensagem || response.statusText || response.status}`);
             }
         } catch (error) {
             console.error("❌ Erro ao reativar paciente:", error);
             alert("Erro ao conectar com o servidor.");
         }
-    });
+    }
+
+    // Tenta anexar o listener diretamente; se o botão não existir, usa delegação no documento como fallback
+    const _btnConfirmarReativar = document.getElementById('btn-confirmar-reativar');
+    if (_btnConfirmarReativar) {
+        _btnConfirmarReativar.addEventListener('click', reativarPaciente);
+    } else {
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (!target) return;
+
+            // verifica id ou se um ancestral do elemento possui esse id (por exemplo: ícone dentro do botão)
+            if (target.id === 'btn-confirmar-reativar' || (target.closest && target.closest('#btn-confirmar-reativar'))) {
+                reativarPaciente();
+            }
+        });
+    }
 
     // ===== ✅ CORRIGIDO: FILTRAR PACIENTES =====
     function filtrarPacientes() {

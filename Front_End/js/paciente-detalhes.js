@@ -115,11 +115,12 @@
 
             console.log("👤 Role do usuário:", role);
 
-            if (role === 'ADMIN') {
-                console.log("✅ Usuário é ADMIN - exibindo botão de excluir");
+            // Mostrar botão de excluir para usuários autenticados (ADMIN ou USER)
+            if (role === 'ADMIN' || role === 'USER') {
+                console.log("✅ Usuário possui permissão para exclusão - exibindo botão de excluir (role:", role, ")");
                 btnExcluir.style.display = 'inline-flex';
             } else {
-                console.log("🚫 Usuário não é ADMIN - ocultando botão de excluir");
+                console.log("🚫 Usuário sem permissão para exclusão - ocultando botão de excluir (role:", role, ")");
                 btnExcluir.style.display = 'none';
             }
         } catch (e) {
@@ -404,13 +405,14 @@
             const payload = decodeJWT(token);
             const role = payload?.role;
 
-            if (role !== 'ADMIN') {
+            // Permitir exclusão para ADMIN e USER (a autorização no backend já permite ambos)
+            if (!(role === 'ADMIN' || role === 'USER')) {
                 alert(
                     "⚠️ ACESSO NEGADO\n\n" +
-                    "Apenas usuários com perfil ADMIN podem excluir pacientes.\n\n" +
-                    "Esta ação requer permissões administrativas."
+                    "Você não tem permissão para excluir pacientes.\n\n" +
+                    "Esta ação requer um perfil autorizado (ADMIN ou USER)."
                 );
-                console.log("🚫 Usuário não é ADMIN - exclusão negada");
+                console.log("🚫 Usuário sem permissão para exclusão - ação negada (role:", role, ")");
                 return;
             }
 
