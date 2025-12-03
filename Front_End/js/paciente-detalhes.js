@@ -115,7 +115,6 @@
 
             console.log("👤 Role do usuário:", role);
 
-            // Mostrar botão de excluir para usuários autenticados (ADMIN ou USER)
             if (role === 'ADMIN' || role === 'USER') {
                 console.log("✅ Usuário possui permissão para exclusão - exibindo botão de excluir (role:", role, ")");
                 btnExcluir.style.display = 'inline-flex';
@@ -357,7 +356,7 @@
         }
     });
 
-    // ===== ✅ FUNÇÃO COMPLETA PARA DELETAR PACIENTE (ADMIN ONLY) =====
+    // ===== ✅ FUNÇÃO COMPLETA PARA DELETAR PACIENTE =====
     window.excluirPaciente = async function () {
         if (!pessoaAtual) {
             alert("❌ Erro: Dados do paciente não disponíveis.");
@@ -366,7 +365,6 @@
 
         console.log("🗑️ Iniciando processo de exclusão do paciente:", pessoaAtual.nomeCompleto);
 
-        // ✅ Primeira confirmação
         const confirmacao1 = confirm(
             `⚠️ ATENÇÃO: Exclusão de Paciente\n\n` +
             `Tem certeza que deseja excluir o paciente "${pessoaAtual.nomeCompleto}"?\n\n` +
@@ -379,7 +377,6 @@
             return;
         }
 
-        // ✅ Segunda confirmação (mais enfática)
         const confirmacao2 = confirm(
             `🚨 ÚLTIMA CONFIRMAÇÃO\n\n` +
             `Esta ação NÃO PODE SER DESFEITA!\n\n` +
@@ -392,7 +389,6 @@
             return;
         }
 
-        // ✅ Verificar se o token existe
         const token = localStorage.getItem("token");
         if (!token) {
             alert("❌ Você precisa estar logado para excluir um paciente.");
@@ -400,12 +396,10 @@
             return;
         }
 
-        // ✅ Verificar se o usuário é ADMIN
         try {
             const payload = decodeJWT(token);
             const role = payload?.role;
 
-            // Permitir exclusão para ADMIN e USER (a autorização no backend já permite ambos)
             if (!(role === 'ADMIN' || role === 'USER')) {
                 alert(
                     "⚠️ ACESSO NEGADO\n\n" +
@@ -426,7 +420,6 @@
             return;
         }
 
-        // ✅ Executar a exclusão
         try {
             console.log("🔄 Enviando requisição de exclusão para o backend...");
             console.log("UUID do paciente:", pessoaAtual.uuid);
@@ -443,7 +436,6 @@
             if (response.ok || response.status === 204) {
                 console.log("✅ Paciente excluído com sucesso");
 
-                // Limpar dados do localStorage
                 localStorage.removeItem("pacienteSelecionado");
 
                 alert(
@@ -452,7 +444,6 @@
                     `Você será redirecionado para a página inicial.`
                 );
 
-                // Redirecionar para home após 1 segundo
                 setTimeout(() => {
                     window.location.href = "home.html";
                 }, 1000);
@@ -582,7 +573,6 @@
             // Buscar histórico de vacinações
             await buscarHistoricoVacinal(pessoa.uuid);
             
-            // ✅ Controlar visibilidade do botão de excluir
             controlarVisibilidadeBotaoExcluir();
 
         } catch (error) {
@@ -592,15 +582,22 @@
         }
     }
 
-    // ===== BUSCAR HISTÓRICO VACINAL =====
+    // ===== ✅ BUSCAR HISTÓRICO VACINAL - SOLUÇÃO COM UUIDs =====
     async function buscarHistoricoVacinal(pessoaUuid) {
         console.log("💉 Buscando histórico vacinal do paciente:", pessoaUuid);
 
+        const tbody = document.getElementById('historico-vacinacao-body');
+        const msgVazio = document.getElementById('historico-vacinacao-vazio');
+
+        if (!tbody || !msgVazio) {
+            console.error("❌ Elementos da tabela não encontrados no DOM");
+            return;
+        }
+
         try {
+            // ✅ BUSCAR TODAS AS VACINAÇÕES
             const response = await fetch(`${API_BASE}/vacinacoes?size=1000&page=0`, {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (!response.ok) {
@@ -608,6 +605,7 @@
             }
 
             const data = await response.json();
+            console.log("📦 Resposta da API de vacinações:", data);
             
             let vacinacoes = [];
             if (Array.isArray(data?.dados) && Array.isArray(data.dados[0])) {
@@ -616,39 +614,124 @@
                 vacinacoes = data.dados;
             }
 
-            // Filtrar vacinações do paciente
+            console.log("📦 Total de vacinações no sistema:", vacinacoes.length);
+
+            // ✅ Criar cache de pessoas e vacinas para performance
+            const cachePessoas = {};
+            const cacheVacinas = {};
+
+            // ✅ PROCESSAR CADA VACINAÇÃO
             const vacinacoesPaciente = [];
             
             for (const v of vacinacoes) {
                 try {
+                    console.log(`\n🔍 Processando vacinação ${v.uuid}`);
+                    
+                    // Buscar detalhes completos da vacinação
                     const respDetalhe = await fetch(`${API_BASE}/vacinacoes/${v.uuid}`, {
                         headers: { "Authorization": `Bearer ${token}` }
                     });
                     
-                    if (respDetalhe.ok) {
-                        const detalhe = await respDetalhe.json();
-                        
-                        let detalheDados = null;
-                        if (Array.isArray(detalhe?.dados) && Array.isArray(detalhe.dados[0])) {
-                            detalheDados = detalhe.dados[0][0];
-                        } else if (Array.isArray(detalhe?.dados)) {
-                            detalheDados = detalhe.dados[0];
-                        } else if (detalhe?.dados) {
-                            detalheDados = detalhe.dados;
-                        } else {
-                            detalheDados = detalhe;
-                        }
-                        
-                        if (detalheDados && detalheDados.pessoa && detalheDados.pessoa.uuid === pessoaUuid) {
-                            vacinacoesPaciente.push({
-                                ...v,
-                                pessoa: detalheDados.pessoa,
-                                vacina: detalheDados.vacina
+                    if (!respDetalhe.ok) {
+                        console.warn(`⚠️ Erro ao buscar vacinação ${v.uuid}`);
+                        continue;
+                    }
+
+                    const detalhe = await respDetalhe.json();
+                    
+                    let detalheDados = null;
+                    if (Array.isArray(detalhe?.dados) && Array.isArray(detalhe.dados[0])) {
+                        detalheDados = detalhe.dados[0][0];
+                    } else if (Array.isArray(detalhe?.dados)) {
+                        detalheDados = detalhe.dados[0];
+                    } else if (detalhe?.dados) {
+                        detalheDados = detalhe.dados;
+                    } else {
+                        detalheDados = detalhe;
+                    }
+                    
+                    console.log(`📄 Detalhe da vacinação:`, detalheDados);
+
+                    // ✅ VERIFICAR SE A API RETORNA pessoaUuid e vacinaUuid
+                    const vacinacaoPessoaUuid = detalheDados.pessoaUuid || detalheDados.pessoa?.uuid;
+                    const vacinacaoVacinaUuid = detalheDados.vacinaUuid || detalheDados.vacina?.uuid;
+
+                    console.log(`🔎 Pessoa UUID da vacinação: ${vacinacaoPessoaUuid}`);
+                    console.log(`🔎 Paciente UUID buscado: ${pessoaUuid}`);
+                    console.log(`🔎 UUIDs são iguais? ${vacinacaoPessoaUuid === pessoaUuid}`);
+
+                    // ✅ FILTRAR: Apenas vacinações deste paciente
+                    if (vacinacaoPessoaUuid !== pessoaUuid) {
+                        console.log("❌ Vacinação não pertence a este paciente");
+                        continue;
+                    }
+
+                    console.log("✅ Vacinação pertence a este paciente!");
+
+                    // ✅ BUSCAR DADOS DA PESSOA (se não estiver em cache)
+                    let pessoa = cachePessoas[vacinacaoPessoaUuid];
+                    if (!pessoa) {
+                        try {
+                            const respPessoa = await fetch(`${API_BASE}/pessoa/${vacinacaoPessoaUuid}`, {
+                                headers: { "Authorization": `Bearer ${token}` }
                             });
+                            
+                            if (respPessoa.ok) {
+                                const dataPessoa = await respPessoa.json();
+                                if (Array.isArray(dataPessoa?.dados) && Array.isArray(dataPessoa.dados[0])) {
+                                    pessoa = dataPessoa.dados[0][0];
+                                } else if (Array.isArray(dataPessoa?.dados)) {
+                                    pessoa = dataPessoa.dados[0];
+                                } else if (dataPessoa?.dados) {
+                                    pessoa = dataPessoa.dados;
+                                }
+                                cachePessoas[vacinacaoPessoaUuid] = pessoa;
+                                console.log("👤 Pessoa carregada:", pessoa?.nomeCompleto);
+                            }
+                        } catch (err) {
+                            console.warn("⚠️ Erro ao buscar pessoa:", err);
                         }
                     }
+
+                    // ✅ BUSCAR DADOS DA VACINA (se não estiver em cache)
+                    let vacina = cacheVacinas[vacinacaoVacinaUuid];
+                    if (!vacina) {
+                        try {
+                            const respVacina = await fetch(`${API_BASE}/vacina/${vacinacaoVacinaUuid}`, {
+                                headers: { "Authorization": `Bearer ${token}` }
+                            });
+                            
+                            if (respVacina.ok) {
+                                const dataVacina = await respVacina.json();
+                                if (Array.isArray(dataVacina?.dados) && Array.isArray(dataVacina.dados[0])) {
+                                    vacina = dataVacina.dados[0][0];
+                                } else if (Array.isArray(dataVacina?.dados)) {
+                                    vacina = dataVacina.dados[0];
+                                } else if (dataVacina?.dados) {
+                                    vacina = dataVacina.dados;
+                                }
+                                cacheVacinas[vacinacaoVacinaUuid] = vacina;
+                                console.log("💉 Vacina carregada:", vacina?.nome);
+                            }
+                        } catch (err) {
+                            console.warn("⚠️ Erro ao buscar vacina:", err);
+                        }
+                    }
+
+                    // ✅ MONTAR OBJETO COMPLETO DA VACINAÇÃO
+                    const vacinacaoCompleta = {
+                        uuid: detalheDados.uuid || v.uuid,
+                        dataAplicacao: detalheDados.dataAplicacao || v.dataAplicacao,
+                        dataProximaDose: detalheDados.dataProximaDose || v.dataProximaDose,
+                        pessoa: pessoa || { nomeCompleto: 'Desconhecido', cpf: 'N/A' },
+                        vacina: vacina || { nome: 'Vacina não identificada', numeroLote: 'N/A', fabricante: 'N/A' }
+                    };
+
+                    vacinacoesPaciente.push(vacinacaoCompleta);
+                    console.log("✅ Vacinação completa adicionada:", vacinacaoCompleta);
+
                 } catch (err) {
-                    console.warn("⚠️ Erro ao buscar detalhe da vacinação:", err);
+                    console.warn("⚠️ Erro ao processar vacinação:", err);
                 }
             }
 
@@ -656,26 +739,46 @@
             vacinacoesFiltradasAtual = [...vacinacoesPaciente];
             
             console.log(`✅ ${vacinacoesPaciente.length} vacinações encontradas para o paciente`);
+            console.log("📊 Vacinações do paciente (completas):", vacinacoesPaciente);
 
             renderizarHistoricoVacinal(vacinacoesPaciente);
 
         } catch (error) {
             console.error("❌ Erro ao buscar histórico vacinal:", error);
+            tbody.innerHTML = '';
+            msgVazio.style.display = 'block';
+            msgVazio.textContent = 'Erro ao carregar histórico de vacinações.';
         }
     }
 
-    // ===== RENDERIZAR HISTÓRICO VACINAL =====
+    // ===== ✅ RENDERIZAR HISTÓRICO VACINAL - CORRIGIDO =====
     function renderizarHistoricoVacinal(vacinacoes) {
         const tbody = document.getElementById('historico-vacinacao-body');
         const msgVazio = document.getElementById('historico-vacinacao-vazio');
 
-        if (vacinacoes.length === 0) {
-            tbody.innerHTML = '';
-            msgVazio.style.display = 'block';
+        console.log("🎨 Renderizando histórico vacinal...");
+        console.log("📊 Quantidade de vacinações:", vacinacoes.length);
+
+        // ✅ GARANTIR QUE OS ELEMENTOS EXISTAM
+        if (!tbody || !msgVazio) {
+            console.error("❌ Elementos da tabela não encontrados no DOM");
             return;
         }
 
+        // ✅ LIMPAR TABELA SEMPRE
         tbody.innerHTML = '';
+
+        // ✅ VERIFICAR SE NÃO HÁ VACINAÇÕES
+        if (!vacinacoes || vacinacoes.length === 0) {
+            console.log("ℹ️ Nenhuma vacinação encontrada - exibindo mensagem");
+            msgVazio.style.display = 'block';
+            msgVazio.textContent = 'Nenhuma vacinação registrada para este paciente.';
+            removerPaginacao();
+            return;
+        }
+
+        // ✅ HÁ VACINAÇÕES - OCULTAR MENSAGEM E RENDERIZAR
+        console.log("✅ Vacinações encontradas - renderizando tabela");
         msgVazio.style.display = 'none';
 
         // Ordenar por data de aplicação (mais recente primeiro)
@@ -736,6 +839,7 @@
         });
 
         criarPaginacao(vacinacoesOrdenadas.length);
+        console.log(`✅ ${vacinacoesPaginadas.length} vacinações renderizadas (Página ${paginaAtual} de ${totalPaginas})`);
     }
 
     // ===== FUNÇÃO AUXILIAR PARA FORMATAR FABRICANTE =====
@@ -919,6 +1023,13 @@
         }
         
         return btn;
+    }
+
+    function removerPaginacao() {
+        const paginacaoExistente = document.querySelector('.paginacao-container');
+        if (paginacaoExistente) {
+            paginacaoExistente.remove();
+        }
     }
 
     // ===== FILTRO DE VACINAÇÕES =====
