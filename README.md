@@ -66,23 +66,6 @@ https://github.com/user-attachments/assets/ec50b3f5-8cb1-4423-be83-1c39c1500e60
 
 ---
 
-## 🎥 GIF Demonstrativo
-
-<!-- Adicione aqui GIFs ou screenshots do sistema em funcionamento -->
-
-```
-[Fluxo de Cadastro de Paciente]
-Login → Dashboard → Cadastrar Paciente → Preencher Formulário → Sucesso
-
-[Fluxo de Registro de Vacinação]
-Buscar Paciente → Ver Detalhes → Registrar Vacinação → Selecionar Vacina → Confirmar
-
-[Fluxo de Visualização de Histórico]
-Buscar por CPF → Detalhes do Paciente → Histórico Vacinal com Paginação e Filtros
-```
-
----
-
 ## 🛠️ Tecnologias Utilizadas
 
 ### **Frontend**
